@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>1987 가려진 기록</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: full-bleed walkable WebGL room, thin HUD rails top/bottom, evidence-folder modals over it. Single committed dark look. */
+:root{
+  color-scheme:dark;
+  --ink:#0d1312; --panel:#141c1b; --paper:#ece3cc; --paper-ink:#2a2620;
+  --fg:#e9e4d6; --muted:#9fb0aa; --brass:#c9a86a; --stamp:#b5402f; --teal:#7fa39c; --good:#8fbf8a; --warn:#d9a441;
+  --line:#c9a86a33;
+  --f-display:'Nanum Myeongjo','Batang',serif;
+  --f-body:'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  --f-mono:'IBM Plex Mono','Consolas',monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(--fg);font:15px/1.6 var(--f-body)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#cv.drag{cursor:grabbing}
+#vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 50%,#05090899 100%),linear-gradient(#070b0acc,transparent 16%,transparent 80%,#070b0ad9)}
+#hot{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.hs{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.hs .ring{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:600 12px var(--f-mono);color:var(--ink);background:var(--brass);box-shadow:0 0 0 4px #c9a86a40,0 0 24px #c9a86a90;animation:pulse 1.8s ease-in-out infinite;transition:transform .2s}
+.hs .lab{font-size:12px;background:#0d1312d9;border:1px solid var(--line);padding:3px 9px;border-radius:3px;white-space:nowrap;color:var(--fg)}
+.hs.aim .ring{transform:scale(1.18)}
+.hs.locked .ring{background:#263130;color:var(--muted);box-shadow:0 0 0 3px #ffffff14;animation:none;width:30px;height:30px;font-size:10px}
+.hs.locked .lab{display:none}
+.hs.done .ring{background:#1f2d2a;color:var(--good);box-shadow:0 0 0 3px #8fbf8a55;animation:none;width:32px;height:32px}
+.hs.done .lab{display:none}
+.hs.nav .ring{background:#0d1312cc;color:var(--teal);border:2px solid var(--teal);box-shadow:0 0 0 4px #7fa39c30;animation:none;font-size:18px}
+.hs.nav .lab{display:block;border-color:#7fa39c66}
+.hs.nav.next .ring{color:var(--ink);background:var(--teal);animation:pulse2 1.6s ease-in-out infinite}
+@keyframes pulse2{50%{box-shadow:0 0 0 10px #7fa39c22,0 0 30px #7fa39ccc}}
+.hs.door .ring{background:var(--stamp);color:#fff;box-shadow:0 0 0 4px #b5402f44,0 0 26px #b5402faa}
+.hs.door.locked .ring{background:#2a1c1a;color:#d99a8d;box-shadow:0 0 0 3px #b5402f33}
+.hs:hover .lab,.hs:focus-visible .lab,.hs.aim .lab{display:block}
+@keyframes pulse{50%{box-shadow:0 0 0 9px #c9a86a1a,0 0 34px #c9a86acc}}
+@media (prefers-reduced-motion:reduce){.hs .ring{animation:none}}
+#blink{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:24}
+.views{display:flex;gap:4px;flex-wrap:wrap;background:#0d1312d9;border:1px solid var(--line);padding:4px;border-radius:4px;align-self:flex-end}
+.views button{background:none;border:1px solid transparent;color:var(--muted);padding:6px 11px;border-radius:3px;font-size:13px;position:relative}
+.views button kbd{font:600 10px var(--f-mono);border:1px solid #ffffff33;border-radius:2px;padding:0 4px;margin-right:6px}
+.views button[aria-pressed=true]{background:#c9a86a26;border-color:var(--brass);color:var(--fg)}
+.views button.hot::after{content:"";position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--brass);box-shadow:0 0 8px var(--brass)}
+.task .where{color:var(--teal);font-weight:500}
+#cross{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#e9e4d6aa;pointer-events:none}
+
+/* HUD */
+#hud{position:fixed;inset:0;pointer-events:none;padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;justify-content:space-between}
+#hud>*{pointer-events:auto}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.place .eyebrow{font:600 11px var(--f-mono);letter-spacing:.18em;color:var(--brass)}
+.place h1{font:800 clamp(20px,3vw,30px)/1.2 var(--f-display);margin:2px 0 0;text-shadow:0 2px 12px #000}
+.place p{margin:2px 0 0;color:var(--muted);font-size:13px;text-shadow:0 1px 6px #000}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.keys{display:flex;gap:4px}
+.keys span{width:30px;height:36px;display:grid;place-items:center;font:700 18px var(--f-display);border:1px solid var(--line);background:#0d1312cc;color:#4b5755;border-radius:2px}
+.keys span.on{color:var(--brass);border-color:var(--brass);box-shadow:inset 0 0 12px #c9a86a33}
+.tbtn{background:#141c1bd9;border:1px solid var(--line);padding:8px 12px;border-radius:3px;font-size:13px}
+.tbtn:hover{border-color:var(--brass)}
+.tbtn b{color:var(--brass);font-family:var(--f-mono);margin-left:4px}
+.who{font-size:12px;color:var(--muted);text-align:right;width:100%}
+.who b{color:var(--fg);font-weight:500}
+.sync{font:600 10.5px var(--f-mono);padding:2px 6px;border-radius:2px;margin-left:6px;border:1px solid #ffffff22}
+.sync.on{color:var(--good);border-color:#8fbf8a55}.sync.off{color:var(--muted)}.sync.err{color:#e59a8b;border-color:#b5402f66}
+.bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.task{max-width:min(520px,100%);background:#0d1312d9;border-left:3px solid var(--brass);padding:10px 14px;font-size:13.5px}
+.task b{color:var(--brass);font-family:var(--f-mono);font-weight:600}
+.task .help{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.task .help kbd{font:600 11px var(--f-mono);border:1px solid #ffffff33;border-bottom-width:2px;padding:0 5px;border-radius:3px;color:var(--fg)}
+#prompt{position:fixed;left:50%;top:calc(96px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:#0d1312ee;border:1px solid var(--brass);padding:9px 16px;border-radius:3px;font-size:14px;pointer-events:auto;cursor:pointer;max-width:calc(100% - 32px);text-align:center}
+#prompt kbd{font:600 12px var(--f-mono);background:var(--brass);color:var(--ink);padding:1px 7px;border-radius:2px;margin-right:6px}
+#prompt.locked{border-color:#ffffff33;color:var(--muted);cursor:default}
+#pad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:6px}
+#pad button{background:#141c1bd9;border:1px solid var(--line);border-radius:6px;font-size:18px;touch-action:none;user-select:none;-webkit-user-select:none}
+#pad .act{background:var(--brass);color:var(--ink);font:700 13px var(--f-body)}
+#toast{position:fixed;left:50%;top:22%;transform:translateX(-50%);background:#0d1312ee;border:1px solid var(--brass);padding:10px 18px;border-radius:3px;max-width:min(90vw,460px);text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;z-index:25}
+#toast.on{opacity:1}
+@media (pointer:coarse){#prompt,#blink{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:24}
+.views{display:flex;gap:4px;flex-wrap:wrap;background:#0d1312d9;border:1px solid var(--line);padding:4px;border-radius:4px;align-self:flex-end}
+.views button{background:none;border:1px solid transparent;color:var(--muted);padding:6px 11px;border-radius:3px;font-size:13px;position:relative}
+.views button kbd{font:600 10px var(--f-mono);border:1px solid #ffffff33;border-radius:2px;padding:0 4px;margin-right:6px}
+.views button[aria-pressed=true]{background:#c9a86a26;border-color:var(--brass);color:var(--fg)}
+.views button.hot::after{content:"";position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--brass);box-shadow:0 0 8px var(--brass)}
+.task .where{color:var(--teal);font-weight:500}
+#cross{display:none!important}}
+@media (max-width:640px){.task .help,.task>span:not(.where),.place p{display:none}.views button{font-size:11.5px;padding:5px 7px}.views button kbd{display:none}.task{font-size:12.5px;padding:8px 10px}.keys span{width:24px;height:30px;font-size:15px}.tbtn{padding:6px 9px;font-size:12px}}
+
+/* Modal = evidence folder */
+.overlay{position:fixed;inset:0;background:#050807cc;backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:calc(12px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));z-index:60}
+.sheet{width:min(1100px,100%);max-height:100%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:4px;box-shadow:0 30px 80px #000}
+.sheet.narrow{width:min(560px,100%)}
+.sh-head{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:2}
+.sh-head .id{font:600 13px var(--f-mono);color:var(--ink);background:var(--brass);padding:3px 8px;border-radius:2px}
+.sh-head h2{font:700 20px/1.3 var(--f-display);margin:0;flex:1;min-width:0;text-wrap:balance}
+.chip{font-size:11px;border:1px solid var(--line);color:var(--brass);padding:2px 8px;border-radius:20px;white-space:nowrap}
+.x{background:none;border:1px solid var(--line);width:36px;height:36px;border-radius:50%;font-size:16px;flex:none}
+.sh-body{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:20px;padding:20px}
+@media (max-width:760px){.sh-body{grid-template-columns:1fr}.sh-head h2{font-size:17px}}
+.paper{background:var(--paper);color:var(--paper-ink);padding:36px 22px 18px;border-radius:2px;position:relative;font-size:14.5px;box-shadow:0 2px 0 #0003,4px 6px 18px #0007;transform:rotate(-.4deg);min-width:0;align-self:start}
+.paper.real::before{content:"실제 발표를 바탕으로 재구성"}
+.paper::before{content:"게임 속 가상 자료";position:absolute;top:10px;right:10px;font:600 10px var(--f-mono);letter-spacing:.06em;color:var(--stamp);border:1.5px solid var(--stamp);padding:2px 6px;transform:rotate(3deg);opacity:.85}
+.paper .obj{font:600 11px var(--f-mono);letter-spacing:.12em;color:#7a6e58;margin-bottom:8px}
+.paper h4{font:800 16px var(--f-display);margin:12px 0 6px}
+.paper h4:first-of-type{margin-top:0}
+.paper p{margin:0 0 8px}
+.paper .hand{font-family:var(--f-display);border-left:3px solid #b9a77f;padding-left:10px}
+.paper .en,.paper [lang=en]{font-family:var(--f-mono);font-size:14px}
+.paper .mono{font-family:var(--f-mono)}
+.paper .muted{color:#6c6455;font-size:12.5px}
+.paper .blot{background:#5a7b8a55;color:transparent;border-radius:40%;filter:blur(1.5px);padding:0 4px}
+.paper .eq{font:700 15px var(--f-display);background:#0000000d;padding:8px;text-align:center}
+.paper .chips{display:flex;gap:6px;flex-wrap:wrap}.paper .chips span{border:1px solid #8c7f62;padding:2px 10px;background:#fff6}
+.paper .tbl{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums;margin:6px 0}
+.paper .tbl th,.paper .tbl td{border:1px solid #a89a7c;padding:4px 6px;text-align:center}
+.paper .tbl th{background:#0000000f}
+.paper .ledger{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0 0 10px}.paper .ledger dt{font-weight:700}.paper .ledger dd{margin:0}
+.paper .twin{display:grid;grid-template-columns:1fr 1fr;gap:12px}.paper .twin>div{background:#fff5;padding:10px;border:1px dashed #a89a7c}.paper .twin>div:last-child{background:#b5402f12}
+.paper ol.decl{margin:0 0 10px;padding-left:20px;display:grid;gap:4px;font-family:var(--f-display);font-size:14px}
+.paper .fig{width:100%;max-width:220px;display:block;margin:8px auto 0;color:#4a4436}
+.parts{display:flex;flex-direction:column;gap:18px;min-width:0}
+.part{border:1px solid transparent;border-radius:4px;padding:2px 0}
+.part .q{margin:0 0 8px;font-weight:500}
+.part.en .q{font-family:var(--f-body)}
+.part.bad{border-color:#b5402f88;background:#b5402f12;padding:8px}
+.part.good{border-color:#8fbf8a55;padding:8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{background:#1c2625;border:1px solid #ffffff1f;padding:9px 14px;border-radius:3px;text-align:left;max-width:100%}
+.opt:hover{border-color:var(--brass)}
+.opt.sel{background:#c9a86a26;border-color:var(--brass);color:#fff}
+.opt.ox{width:64px;text-align:center;font:700 20px var(--f-display)}
+.opt.en{font-family:var(--f-mono)}
+.opt.pic{padding:5px;width:min(190px,30%);min-width:92px;position:relative}
+.opt.pic img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:2px}
+.opt.pic .no{position:absolute;top:8px;left:8px;font:700 12px var(--f-mono);background:#0d1312d9;color:var(--fg);padding:1px 7px;border-radius:2px}
+.opt.pic.sel{box-shadow:0 0 0 3px var(--brass)}
+.mrows{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#1a2322;padding:8px 10px;border-radius:3px}
+.row .lbl{flex:1 1 200px;min-width:0}
+.en .row .lbl{font-family:var(--f-mono)}
+.row select{background:#0d1312;border:1px solid #ffffff2a;padding:7px 10px;border-radius:3px;min-width:150px;max-width:100%}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{background:#0d1312;border:1px solid #ffffff2a;padding:6px 12px;border-radius:3px;font-size:13px}
+.seg button.sel{background:#c9a86a2e;border-color:var(--brass)}
+.seq{min-height:48px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;border:1px dashed var(--brass);border-radius:3px;margin-bottom:8px;background:#c9a86a0d}
+.seq:empty::before{content:"아래 카드를 순서대로 누르세요";color:var(--muted);font-size:13px}
+.seq .tile{background:#c9a86a33;border-color:var(--brass)}
+.tile{background:#1c2625;border:1px solid #ffffff2a;padding:7px 12px;border-radius:3px}
+.en .tile{font-family:var(--f-mono)}
+.tile.used{visibility:hidden}
+.tile.letter{width:42px;height:46px;padding:0;font:700 20px var(--f-mono)}
+.codein{font:600 24px var(--f-mono);letter-spacing:.3em;width:min(220px,100%);background:#0d1312;border:1px solid var(--brass);padding:8px 12px;border-radius:3px;text-align:center}
+.codein.short{font-size:18px;letter-spacing:.1em;width:120px}
+.sh-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 20px 20px;border-top:1px solid var(--line)}
+.btn{background:#1c2625;border:1px solid #ffffff2a;padding:10px 18px;border-radius:3px}
+.btn:hover{border-color:var(--brass)}
+.btn.primary{background:var(--brass);color:var(--ink);border-color:var(--brass);font-weight:700}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.fb{flex:1 1 220px;min-width:0;font-size:13.5px;color:var(--muted);margin:0}
+.fb.err{color:#e59a8b}
+.hintbox{margin:0 20px 0;padding:10px 14px;background:#7fa39c1c;border-left:3px solid var(--teal);font-size:14px}
+.result{padding:18px 20px 22px;display:grid;gap:14px;border-top:1px solid var(--line)}
+.result h3{margin:0;font:800 22px var(--f-display);color:var(--good)}
+.result .expl,.expl{margin:0}
+.cluecard{background:var(--paper);color:var(--paper-ink);padding:12px 16px;border-radius:2px;font-family:var(--f-display);position:relative}
+.cluecard small{display:block;font:600 10px var(--f-mono);letter-spacing:.14em;color:#7a6e58;margin-bottom:4px}
+
+/* Drawer */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--panel);border-left:1px solid var(--line);z-index:62;overflow:auto;padding:calc(18px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 24px 20px;box-shadow:-20px 0 60px #000a}
+.drawer h2{font:800 22px var(--f-display);margin:0 0 4px}
+.drawer h3{font:700 15px var(--f-display);color:var(--brass);margin:18px 0 8px}
+.dh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.wl{width:100%;border-collapse:collapse;font-size:13px}
+.wl td{border-bottom:1px solid #ffffff12;padding:6px 4px;vertical-align:top}
+.wl td:first-child{font-family:var(--f-mono);color:var(--fg)}
+.wl td:last-child{color:var(--muted);font-family:var(--f-mono);font-size:11.5px;white-space:nowrap}
+.ladder{display:grid;gap:6px}
+.ladder div{display:grid;grid-template-columns:70px 1fr;gap:8px;padding:6px 8px;background:#1a2322;border-radius:3px;font-size:13px}
+.ladder b{font-family:var(--f-mono);color:var(--brass)}
+.cn{background:#1a2322;border-radius:3px;padding:8px 10px;margin-bottom:6px}.cn b{display:block;font-size:12px;color:var(--brass);margin-bottom:4px}.cn ul{margin:0;padding-left:18px;display:grid;gap:3px}.cn li{font:13px/1.5 var(--f-mono);color:var(--fg)}
+.exp{font-size:13px;color:var(--muted);margin:0 0 6px}.exp span{font-family:var(--f-mono);color:var(--fg)}
+
+/* Notebook */
+.nb{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:20px;padding:20px}
+@media (max-width:820px){.nb{grid-template-columns:1fr}}
+.nb-clues{display:flex;flex-direction:column;gap:8px;min-width:0}
+.nb-clues h3,.nb-form h3{font:700 15px var(--f-display);color:var(--brass);margin:6px 0 4px}
+.nbc{background:var(--paper);color:var(--paper-ink);padding:9px 12px;border-radius:2px;font-size:13.5px;display:grid;gap:6px}
+.nbc small{font:600 10px var(--f-mono);color:#7a6e58;letter-spacing:.1em}
+.nbc button{justify-self:start;background:#2a2620;color:var(--paper);border:0;padding:4px 10px;border-radius:2px;font-size:12px}
+.nbc.sci{border-left:4px solid #2f7a5a}
+.nbc .tag{font:600 10px var(--f-mono);color:#2f7a5a;margin-left:6px}
+.nb-empty{color:var(--muted);font-size:13px}
+.nb-form{display:flex;flex-direction:column;gap:14px;min-width:0}
+.fld{display:grid;gap:6px}
+.fld label,.fld .lb{font-weight:500;font-size:14px}
+.fld .sub{color:var(--muted);font-size:12.5px}
+.fld textarea,.fld input[type=text],.fld select{background:#0d1312;border:1px solid #ffffff2a;border-radius:3px;padding:9px 11px;width:100%;resize:vertical}
+.fld textarea{min-height:76px;line-height:1.6}
+.evi{display:grid;gap:6px;background:#1a2322;padding:10px;border-radius:3px;border-left:3px solid #2f7a5a}
+.evi .n{font:600 11px var(--f-mono);color:var(--good)}
+.bank{display:flex;flex-wrap:wrap;gap:5px}
+.bank button{background:#0d1312;border:1px solid #7fa39c66;color:var(--teal);padding:2px 9px;border-radius:20px;font-size:12px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.pair{grid-template-columns:1fr}}
+.saved{font:600 11px var(--f-mono);color:var(--muted)}
+
+/* Full screens */
+.screen{position:fixed;inset:0;z-index:50;overflow:auto;display:flex;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:var(--ink)}
+.notice{max-width:640px;width:100%;margin:auto}
+.notice .eyebrow{font:600 11px var(--f-mono);letter-spacing:.24em;color:var(--brass)}
+.notice h1{font:800 clamp(30px,6vw,52px)/1.15 var(--f-display);margin:10px 0 6px;text-wrap:balance}
+.notice h1 em{font-style:normal;color:var(--brass)}
+.notice .sub{color:var(--muted);margin:0 0 6px}
+.notice .credit{font:500 11.5px var(--f-mono);letter-spacing:.06em;color:#7f8f8a;margin:0 0 22px}
+.notice .card{border:1px solid var(--line);padding:22px 24px;background:#141c1b;border-radius:3px}
+.notice .card h2{font:700 17px var(--f-display);margin:0 0 10px}
+.notice .card p{margin:0 0 10px;color:#d6d0c1}
+.notice .card p.mission{color:var(--fg);border-top:1px solid var(--line);padding-top:12px;margin-top:14px;font-weight:500}
+.login{display:grid;grid-template-columns:90px 90px 1fr;gap:10px;margin-top:18px}
+@media (max-width:420px){.login{grid-template-columns:1fr 1fr}.login label:last-child{grid-column:1/-1}}
+.login label{display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+.login input{background:#0d1312;border:1px solid var(--brass);border-radius:3px;padding:10px 12px;font-size:16px;color:var(--fg)}
+.notice .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:12.5px;padding:4px}
+#intro{background:#000}
+#intro .bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;filter:saturate(.8)}
+#intro .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#000d 0,#0008 55%,#0003)}
+#intro .inner{position:relative;max-width:1000px;width:100%;display:grid;gap:18px}
+#intro .line{font:400 clamp(17px,2.3vw,22px)/1.8 var(--f-display);max-width:620px;opacity:0;transform:translateY(6px);transition:.8s}
+#intro .line.on{opacity:1;transform:none}
+#intro .doc{font:500 14px/1.8 var(--f-mono);background:#ece3ccee;color:#2a2620;padding:14px 18px;max-width:520px;transform:rotate(-1deg);border-left:4px solid var(--stamp)}
+#intro .msg{max-width:340px;background:#1b2423;border:1px solid #ffffff22;border-radius:14px;padding:12px 14px;font-size:14px;box-shadow:0 10px 30px #000}
+#intro .msg small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
+#fade{position:fixed;inset:0;background:#000 center/cover no-repeat;pointer-events:none;opacity:0;transition:opacity .7s;z-index:45;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:6px;padding:16px}
+#fade::before{content:"";position:absolute;inset:0;background:#000b}
+#fade>*{position:relative}
+#fade .n{font:600 12px var(--f-mono);letter-spacing:.3em;color:var(--brass)}
+#fade .t{font:800 clamp(28px,5vw,46px) var(--f-display)}
+#fade .s{color:var(--muted)}
+.clearbox{text-align:center;padding:30px 24px 26px;display:grid;gap:12px;justify-items:center}
+.clearbox .big{width:96px;height:112px;display:grid;place-items:center;font:800 64px var(--f-display);color:var(--brass);border:2px solid var(--brass);box-shadow:inset 0 0 30px #c9a86a33,0 0 40px #c9a86a33}
+.clearbox h2{font:800 24px var(--f-display);margin:0}
+.clearbox p{margin:0;max-width:520px}
+.keypad{display:flex;gap:8px;justify-content:center}
+.keypad input{width:52px;height:62px;text-align:center;font:800 30px var(--f-display);background:#0d1312;border:1px solid var(--brass);border-radius:3px;text-transform:uppercase}
+.ency{font-family:var(--f-mono);font-size:clamp(16px,2.6vw,22px);background:#ece3cc;color:#2a2620;padding:16px 20px;display:inline-block;margin:6px 0 4px}
+.ency s{color:var(--stamp);text-decoration-thickness:3px}
+.ency ins{text-decoration:none;color:#1d5e43;font-weight:600;margin-left:8px}
+.stats{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.stats b{color:var(--fg);font-family:var(--f-mono)}
+.petition{background:var(--paper);color:var(--paper-ink);padding:28px 26px;border-radius:2px;box-shadow:6px 10px 30px #000a;position:relative}
+.petition h2{font:800 clamp(20px,3.4vw,28px)/1.4 var(--f-display);margin:0 0 12px;text-wrap:balance}
+.petition p{margin:0 0 12px}
+.petition .sigline{display:grid;gap:6px;margin:18px 0 10px}
+.petition .sigline input{background:transparent;border:0;border-bottom:2px solid #2a2620;font:700 26px var(--f-display);padding:4px 2px;color:#1d2a4a}
+.petition .chk{display:flex;gap:10px;align-items:flex-start;font-weight:500;cursor:pointer}
+.petition .chk input{width:22px;height:22px;accent-color:#2a2620;flex:none;margin-top:2px}
+.petition .btn.primary{background:#2a2620;color:var(--paper);border-color:#2a2620}
+.seal{position:absolute;right:18px;bottom:16px;width:96px;height:96px;border:3px solid var(--stamp);border-radius:50%;display:grid;place-items:center;color:var(--stamp);font:800 15px/1.2 var(--f-display);text-align:center;transform:rotate(-12deg);opacity:.85}
+.certname{font:800 30px var(--f-display);color:#1d2a4a}
+
+/* Teacher */
+#teacher{align-items:flex-start;background:#0b100f}
+.tw{width:min(1280px,100%);margin:0 auto;display:grid;gap:16px}
+.thead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:12px}
+.thead h1{font:800 26px var(--f-display);margin:0}
+.thead .eyebrow{font:600 11px var(--f-mono);letter-spacing:.2em;color:var(--brass)}
+.tsum{display:flex;gap:10px;flex-wrap:wrap}
+.tsum div{background:var(--panel);border:1px solid var(--line);padding:10px 14px;border-radius:3px;min-width:120px}
+.tsum b{display:block;font:600 24px var(--f-mono);color:var(--fg)}
+.tsum span{font-size:12px;color:var(--muted)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:3px}
+table.dash{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;min-width:980px}
+table.dash th{text-align:left;font:600 11px var(--f-mono);letter-spacing:.06em;color:var(--muted);background:#141c1b;padding:9px 10px;border-bottom:1px solid var(--line);position:sticky;top:0}
+table.dash td{padding:9px 10px;border-bottom:1px solid #ffffff10;vertical-align:middle}
+table.dash tr:hover td{background:#ffffff06}
+.cells{display:flex;gap:2px}
+.cells i{width:9px;height:16px;background:#26302e;border-radius:1px}
+.cells i.s{background:var(--good)}.cells i.r{background:var(--warn)}.cells i.gap{margin-left:5px}
+.pill{font:600 11px var(--f-mono);padding:2px 8px;border-radius:20px;border:1px solid #ffffff22;white-space:nowrap}
+.pill.done{color:var(--good);border-color:#8fbf8a66}.pill.idle{color:var(--warn);border-color:#d9a44166}
+.tnote{font-size:12.5px;color:var(--muted);margin:0}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:12px;margin-right:4px;vertical-align:-1px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tabs button{background:none;border:1px solid transparent;border-bottom:0;padding:9px 16px;border-radius:4px 4px 0 0;color:var(--muted);font-size:14px;margin-bottom:-1px}
+.tabs button b{font:600 11px var(--f-mono);margin-left:6px;color:var(--muted)}
+.tabs button[aria-selected=true]{background:var(--panel);border-color:var(--line);color:var(--fg);font-weight:700}
+.tabs button[aria-selected=true] b{color:var(--brass)}
+.imgprev{max-width:100%;display:block;margin:0 auto;border:1px solid var(--line)}
+</style>
+</head><body>
+
+<canvas id="cv" aria-label="사건 현장. 끌거나 A D 키, 방향키로 둘러보세요."></canvas>
+<div id="vignette"></div>
+<div id="hot" hidden></div>
+<div id="cross" hidden></div>
+
+<div id="hud" hidden>
+  <div class="top">
+    <div class="place"><div class="eyebrow" id="hEye">SPACE 1 / 5</div><h1 id="hName">경찰 조사실</h1><p id="hSub"></p></div>
+    <div class="tools">
+      <div class="keys" id="keys" aria-label="열쇠 글자"></div>
+      <button class="tbtn" id="bWords">단어장</button>
+      <button class="tbtn" id="bClues">단서 수첩<b id="clueN">0</b></button>
+      <button class="tbtn" id="bMenu" aria-label="메뉴">메뉴</button>
+      <div class="who" id="who"></div>
+    </div>
+  </div>
+  <div class="bottom">
+    <div class="task" id="task"></div>
+    <div class="views" id="views" role="group" aria-label="위치 이동"></div>
+    <div id="pad" hidden>
+      <span></span><button data-k="f" aria-label="위로 보기">▲</button><span></span>
+      <button data-k="tl" aria-label="왼쪽 보기">◀</button><button data-k="b" aria-label="아래로 보기">▼</button><button data-k="tr" aria-label="오른쪽 보기">▶</button>
+    </div>
+  </div>
+</div>
+<div id="prompt" hidden></div>
+<div id="toast" role="status"></div>
+<div id="blink"></div>
+<div id="fade"><div class="n" id="fN"></div><div class="t" id="fT"></div><div class="s" id="fS"></div></div>
+<div id="modalRoot"></div>
+<div id="drawerRoot"></div>
+
+<!-- 첫 화면 -->
+<section class="screen" id="notice">
+  <div class="notice">
+    <div class="eyebrow">평행세계 RPG · 역사 × 과학 × 영어</div>
+    <h1>1987, <em>가려진 기록</em></h1>
+    <p class="sub">다섯 개의 방, 25개의 단서, 다섯 글자의 열쇠</p>
+    <p class="credit">made by. 나수진쌤 &amp; 전소현쌤</p>
+    <div class="card">
+      <h2>이 게임의 세계에 들어가기 전에</h2>
+      <p>이 게임은 실제 역사적 사건을 참고해 만든 평행세계 이야기입니다. 게임 속에서는 1987년 한 대학생의 죽음에 관한 진실이 끝내 밝혀지지 않았고, 이 세계에서는 1987년 6월 민주항쟁이 일어나지 않았습니다. 2026년에도 권위주의 정권이 유지되고 있습니다.</p>
+      <p>게임 속 인물의 행동, 훼손된 문건, 수사 과정은 창작입니다. 실제 역사는 게임을 마친 뒤 함께 확인합니다.</p>
+      <p class="mission">여러분의 임무는 정해진 답에 자료를 끼워 맞추는 것이 아니라, 자료가 뒷받침하는 만큼만 판단하는 것입니다.</p>
+    </div>
+    <form class="login" id="loginForm" autocomplete="off">
+      <label for="sCls">반<input id="sCls" inputmode="numeric" maxlength="3" placeholder="2" required></label>
+      <label for="sNo">번호<input id="sNo" inputmode="numeric" maxlength="3" placeholder="7" required></label>
+      <label for="sName">이름<input id="sName" maxlength="12" placeholder="홍길동" required></label>
+    </form>
+    <p class="fb err" id="loginErr" aria-live="polite"></p>
+    <div class="actions">
+      <button class="btn primary" id="bStart" form="loginForm" type="submit">세계로 들어가기</button>
+      <button class="btn" id="bResume" hidden type="button">이어서 하기</button>
+      <span style="flex:1"></span>
+      <button class="linkbtn" id="bTeacher" type="button">교사용 페이지</button>
+    </div>
+  </div>
+</section>
+
+<!-- 도입 장면 -->
+<section class="screen" id="intro" hidden>
+  <div class="bg" id="introBg"></div>
+  <div class="inner">
+    <p class="line">2026년, 당신은 오래된 사건 기록을 정리하는 말단 경찰관이다.</p>
+    <p class="line">폐기 예정 상자를 옮기던 중, 물에 젖은 문서 한 장이 바닥으로 떨어진다.</p>
+    <div class="line doc">사건 발생: 1987년 1월 □□일<br>공식 사인: 쇼크사<br>첨부 의견: “…기존 발표와 일치하지 않…”</div>
+    <p class="line">마지막 문장은 찢겨 있다. 그 순간 상관에게서 메시지가 온다.</p>
+    <div class="line msg"><small>상관 · 지금</small>그 사건은 종결됐다. 남은 자료도 폐기해.</div>
+    <p class="line"><b>정말 끝난 사건이라면, 왜 기록을 없애려는 것일까?</b></p>
+    <div class="line"><button class="btn primary" id="bEnter">509호 조사실로 들어간다</button></div>
+  </div>
+</section>
+
+<!-- 엔딩 -->
+<section class="screen" id="end" hidden>
+  <div class="notice">
+    <div class="eyebrow">CASE REOPENED · 2026</div>
+    <h1>기록은 더 이상<br><em>침묵하지 않는다.</em></h1>
+    <div class="ency">Cause of death: <s>shock</s><ins>asphyxia</ins></div>
+    <p class="sub" style="margin:14px 0 22px">다섯 공간의 열쇠 글자 <b style="color:var(--brass);font-family:var(--f-mono)">T · R · U · T · H</b> 를 모두 모았습니다.</p>
+    <div class="card">
+      <h2>마지막 임무 두 가지</h2>
+      <p>① 단서 수첩에 사건을 정리하세요. 특히 <b>과학적 증거</b>와 <b>호흡·순환 원리</b>로 사망 원인을 설명해야 합니다. 완성한 수첩은 이미지로 저장할 수 있어요.</p>
+      <p>② 진실을 알리는 데 동참할지 서명으로 답하세요.</p>
+    </div>
+    <div class="stats" id="stats" style="margin-top:16px"></div>
+    <div class="actions"><button class="btn" id="bNotes">단서 수첩 정리하기</button><button class="btn primary" id="bToSign">서명하러 가기</button></div>
+  </div>
+</section>
+
+<!-- 서명 -->
+<section class="screen" id="sign" hidden>
+  <div class="notice">
+    <div class="petition">
+      <div class="eyebrow" style="font:600 11px var(--f-mono);letter-spacing:.2em;color:#7a6e58">2026 · 평행세계 진실 알리기 서명</div>
+      <h2>평행세계의 가려진 진실을 알리는 데에 동참하시겠습니까?</h2>
+      <p>이 세계의 신문은 막혀 있고, 기록은 폐기될 뻔했습니다. 여러분이 모은 증거는 “쇼크사”라는 발표가 사실과 다르다는 것을 보여 줍니다.</p>
+      <div class="sigline"><label for="sigName" style="font-size:12.5px;color:#6c6455">서명 (이름을 직접 쓰세요)</label><input id="sigName" maxlength="12" autocomplete="off"></div>
+      <label class="chk"><input type="checkbox" id="sigChk"> <span>네, 가려진 진실을 세상에 알리는 데 동참합니다.</span></label>
+      <p class="fb err" id="sigErr" style="margin-top:8px"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn primary" id="bSign">서명하기</button><button class="btn" id="bSignBack" style="background:transparent;color:#2a2620;border-color:#2a262055">돌아가기</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- 마지막 -->
+<section class="screen" id="final" hidden>
+  <div class="notice">
+    <div class="petition" style="padding-bottom:120px">
+      <div class="eyebrow" style="font:600 11px var(--f-mono);letter-spacing:.2em;color:#7a6e58">서명 완료</div>
+      <h2>진실을 알리는 서명에 동참했습니다.</h2>
+      <p class="certname" id="certName"></p>
+      <p id="certMeta" style="color:#6c6455;font-size:13px"></p>
+      <p style="font-family:var(--f-mono)">The truth cannot be hidden. Tell the world the truth.</p>
+      <p>다음 영어 시간에는 모은 증거로 바깥 세상에 보낼 비밀 제보서를 씁니다.</p>
+      <div class="seal">진실<br>알림<br>동참</div>
+    </div>
+    <div class="actions"><button class="btn primary" id="bSaveAll">단서 수첩·서명 이미지로 저장</button><button class="btn" id="bNotes2">단서 수첩 고치기</button><button class="btn" id="bHome">첫 화면으로</button></div>
+    <p class="fb" id="finalMsg" aria-live="polite"></p>
+    <p class="credit" style="margin-top:14px;font:500 11.5px var(--f-mono);color:#7f8f8a">made by. 나수진쌤 &amp; 전소현쌤</p>
+  </div>
+</section>
+
+<!-- 교사용 대시보드 -->
+<section class="screen" id="teacher" hidden>
+  <div class="tw">
+    <div class="thead">
+      <div><div class="eyebrow">TEACHER · 1987 가려진 기록</div><h1>학생 진행 현황</h1></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="tnote" id="tUpdated"></span>
+        <label class="tnote" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="tDemo"> 시연 모드(정답 채우기 버튼)</label>
+        <label class="tnote" for="tSort" style="display:flex;gap:6px;align-items:center">정렬 <select id="tSort" style="background:#0d1312;border:1px solid #ffffff2a;border-radius:3px;padding:7px 9px"><option value="no">번호순</option><option value="prog">진행률순</option></select></label><button class="btn" id="tCsv">CSV 내보내기</button><button class="btn" id="tDel" hidden>이 반 기록 지우기</button><button class="btn" id="tRefresh">다시 연결</button><button class="btn" id="tClose">닫기</button>
+      </div>
+    </div>
+    <div class="tabs" id="tTabs" role="tablist" aria-label="반"></div>
+    <div class="tsum" id="tSum"></div>
+    <div class="legend"><span><i style="background:var(--good)"></i>스스로 해결</span><span><i style="background:var(--warn)"></i>정답 공개 후 통과</span><span><i style="background:#26302e"></i>아직</span><span>칸 묶음 = 공간 1~5</span></div>
+    <div class="tbl-wrap"><table class="dash"><thead><tr><th>반</th><th>번호</th><th>이름</th><th>현재 위치</th><th>문항 25</th><th>해결</th><th>힌트</th><th>다시 생각</th><th>정답 공개</th><th>걸린 시간</th><th>단서 수첩</th><th>서명</th><th>마지막 활동</th></tr></thead><tbody id="tBody"></tbody></table></div>
+    <p class="tnote" id="tMsg"></p>
+  </div>
+</section>
+
+<script src="lib/three.min.js"></script>
+<script>
+const IMGS={R0:'img/r0.jpg',R1:'img/r1.jpg',R2:'img/r2.jpg',R3:'img/r3.jpg',R4:'img/r4.jpg',R5:'img/r5.jpg',P0:'img/p0.jpg',P1:'img/p1.jpg',P2:'img/p2.jpg',P3:'img/p3.jpg',P4:'img/p4.jpg',P5:'img/p5.jpg',V0:'img/v0.jpg',V1:'img/v1.jpg',V2:'img/v2.jpg',V3:'img/v3.jpg',V4:'img/v4.jpg',V5:'img/v5.jpg',V6:'img/v6.jpg',V7:'img/v7.jpg',V8:'img/v8.jpg',V9:'img/v9.jpg'};
+</script>
+<script>
+/* ===== 1987 평행세계 방탈출 · 문제 데이터 (문제은행 2026-10-15 통합본) ===== */
+const ROOMS = [
+ {views:[{img:'R1',nav:[[1,20,42],[2,80,38]]},{img:'V0',name:'서랍장·게시판 쪽',spots:{'1-1':[28,60],'1-2':[47,32],'1-3':[84,73]}},{img:'V1',name:'선반·창문·문 쪽',spots:{'1-4':[21,25],'1-5':[38,36]},door:[79,48]}],
+  name:'경찰 조사실', sub:'공식 발표를 의심하다', key:'T', img:'R1',
+  goal:'경찰 발표가 정말 맞는지 확인해야 한다는 의심을 품자.',
+  clear:'발표를 받쳐 주는 과학적 근거가 없다. 다시 조사해야 한다.', reward:'과학 수사실 출입증',
+  door:[93,44], spots:{'1-1':[13,44],'1-2':[27,30],'1-3':[50,57],'1-4':[57,24],'1-5':[68,33]}},
+ {views:[{img:'R2',nav:[[1,27,58],[2,66,32]]},{img:'V2',name:'실험대 쪽',spots:{'2-1':[12,45],'2-2':[36,62],'2-3':[64,52]}},{img:'V3',name:'칠판·게시판 쪽',spots:{'2-4':[36,33],'2-5':[65,32]},door:[85,50]}],
+  name:'과학 수사실', sub:'산소는 어떻게 세포까지 갈까', key:'R', img:'R2',
+  goal:'질식(숨의 문제)과 쇼크(피 흐름의 문제)가 어떻게 다른지 익히자.',
+  clear:'질식은 숨의 문제, 쇼크는 피 흐름의 문제. 어느 쪽이었는지 기록을 확인하라.', reward:'두 가설의 과학적 비교표',
+  door:[95,38], spots:{'2-1':[7,50],'2-2':[27,61],'2-3':[48,52],'2-4':[56,29],'2-5':[80,31]}},
+ {views:[{img:'R3',nav:[[1,14,45],[2,66,48]]},{img:'V4',name:'탁자·라이트박스 쪽',spots:{'3-1':[35,72],'3-2':[52,30]}},{img:'V5',name:'책상·해부도·문 쪽',spots:{'3-3':[66,60],'3-4':[16,64],'3-5':[44,33]},door:[87,45]}],
+  name:'법의학 기록실', sub:'기록은 무엇을 말하는가', key:'U', img:'R3',
+  goal:'눈으로 본 것(관찰)과 짐작한 것(해석)을 구별하고, 기록이 어떻게 바뀌었는지 찾자.',
+  clear:'반출 목록 한 장: “목격 진술서(W-1) → 신문사 보관”', reward:'원본 기록',
+  door:[93,30], spots:{'3-1':[12,70],'3-2':[16,32],'3-3':[90,69],'3-4':[45,68],'3-5':[70,38]}},
+ {views:[{img:'R4',nav:[[1,12,40],[2,70,46]]},{img:'V6',name:'스크랩 벽·타자기 쪽',spots:{'4-1':[26,29],'4-2':[62,57]}},{img:'V7',name:'편집장 책상·금고 쪽',spots:{'4-3':[15,55],'4-4':[46,45],'4-5':[65,42]},door:[88,50]}],
+  name:'신문사 편집실', sub:'누가 말했는지 밝히는 영어', key:'T', img:'R4',
+  goal:'외신에 보내려다 멈춘 자료에서, 출처를 밝히는 짧은 영어 표현을 익히자.',
+  clear:'금고가 열렸다. 안에서 봉인된 목격 진술서(W-1)가 나왔다.', reward:'보도 표현 카드 묶음 + 봉인된 진술서',
+  door:[95,40], spots:{'4-1':[7,24],'4-2':[17,55],'4-3':[45,53],'4-4':[66,42],'4-5':[83,44]}},
+ {views:[{img:'R5',nav:[[1,24,44],[2,74,44]]},{img:'V8',name:'봉투·증거판 쪽',spots:{'5-1':[11,62],'5-2':[39,30],'5-3':[80,62]}},{img:'V9',name:'전화·컴퓨터·금고 문 쪽',spots:{'5-4':[29,50],'5-5':[47,43]},door:[72,35]}],
+  name:'최종 수사실', sub:'흩어진 증거를 하나로', key:'H', img:'R5',
+  goal:'지금까지 모은 증거를 한 화면에 모아 결론을 내자.',
+  clear:'보고서가 완성되었다. 금고 문에 다섯 공간의 열쇠 글자를 입력하라.', reward:'최종 보고서',
+  door:[88,33], spots:{'5-1':[7,57],'5-2':[27,30],'5-3':[46,60],'5-4':[57,45],'5-5':[73,40]}}
+];
+
+const Q = {
+/* ---------- 공간 1 ---------- */
+'1-1':{cat:'단서',title:'접수대장의 잠금번호',obj:'잠긴 서랍장',
+ doc:`<h4>사건 접수대장</h4><dl class="ledger"><dt>발생일</dt><dd>1987년 1월 <span class="blot">□□</span>일 <i>(물에 번짐)</i></dd><dt>장소</dt><dd>남영동 대공분실 509호 조사실</dd><dt>공식 사인</dt><dd>쇼크사</dd></dl><p class="hand">뒷면 메모 — “날짜 = 물이 끓는 온도(℃) ÷ 10 + 4”</p>`,
+ parts:[{t:'code',q:'번진 날짜를 구해서 서랍 비밀번호 4자리(월 2자리 + 일 2자리)를 넣어라.',a:['0114'],ph:'0000'}],
+ hint:'물은 100℃에서 끓어요. 1월은 01이에요.',
+ expl:'100 ÷ 10 + 4 = 14 → 0114',
+ clue:'1987년 1월 14일, 한 대학생이 509호 조사실에서 숨졌다. 경찰은 쇼크사라고 발표했다.'},
+'1-2':{cat:'자료 판단',title:'경찰 발표문 읽기',obj:'게시판의 경찰 발표문',real:1,
+ doc:`<h4>치안본부 발표 (1987년 1월)</h4><p class="muted" style="margin-top:-4px">대학생 사망 사건 경위</p><ol class="decl"><li>1월 14일 오전 8시 10분께 서울 관악구 신림동 하숙집에서 대학생 박○○(21)을 참고인으로 연행하였다.</li><li>오전 9시 16분께 아침 식사를 주었으나 “밥맛이 없다”며 냉수만 여러 컵 마셨다. 전날 밤 술을 많이 마셨다고 하였다.</li><li>오전 10시 51분께 수배 중인 선배의 소재를 묻는 조사를 시작하였다.</li><li>조사 도중 수사관이 책상을 ‘탁’ 치며 추궁하자, 갑자기 ‘억’ 하고 쓰러졌다.</li><li>곧바로 병원으로 옮겼으나 낮 12시께 숨졌다.</li><li><b>사인은 쇼크사(심장마비)로 보인다.</b></li></ol><p class="muted">※ 1987년 실제 경찰 발표의 내용을 바탕으로, 학생용으로 쉽게 다시 쓴 자료예요.</p>`,
+ parts:[{t:'choice',q:'(1) 경찰은 이 사람이 왜 쓰러졌다고 설명했나?',o:['① 책상을 ‘탁’ 치며 추궁하자 놀라서 ‘억’ 하고 쓰러졌다','② 의사가 검사해 보니 심장에 병이 있었다','③ 목격자가 쓰러지는 모습을 사진으로 찍었다'],a:0},
+        {t:'choice',q:'(2) 이 발표문만 보고 알 수 있는 문장은?',o:['A. 경찰은 ‘쇼크사’라고 발표했다.','B. 검사 결과 ‘쇼크사’가 맞다고 밝혀졌다.'],a:0},
+        {t:'choice',q:'(3) B 문장이 사실인지 확인하려면 무엇이 필요할까?',o:['① 경찰 발표문 한 장 더','② 의사의 검사 기록','③ 그날의 날씨'],a:1}],
+ hint:'발표문에 ‘누가’ 한 말인지 보세요. 의사의 검사나 증거가 발표문에 나오나요? “누가 그렇게 말했다”와 “사실로 확인됐다”는 다른 말이에요.',
+ expl:'(1) ① (2) A (3) ②. 발표문은 경찰의 설명일 뿐, 의사의 검사 기록이나 증거는 들어 있지 않아요. 그래서 이 발표문으로는 ‘경찰이 쇼크사라고 발표했다’는 것만 알 수 있고, 정말 쇼크사인지는 의학적 근거로 확인해야 해요.',
+ clue:'메모: 발표 ≠ 사실 — 경찰 발표에는 “책상을 탁 치니 억 하고 쓰러졌다”는 설명뿐, 의학적 근거가 없다'},
+'1-3':{cat:'과학',title:'‘쇼크’라는 단어의 함정',obj:'책상 위 용어 카드',
+ doc:`<h4>용어 카드</h4><p><b>일상의 ‘충격’</b> — 깜짝 놀라는 마음</p><p><b>의학의 ‘쇼크’</b> — 피가 몸을 제대로 돌지 못해, 몸 구석구석에 피와 산소가 부족해지는 위험한 상태</p><p class="hand">경찰 발표: “책상을 ‘탁’ 치니 놀라서 쓰러졌다.”</p>`,
+ parts:[{t:'choice',q:'(1) “큰 소리에 놀랐다”는 말만으로 의학의 쇼크사라고 확실히 말할 수 있다.',o:['O','X'],a:1,ox:1},
+        {t:'choice',q:'(2) 그 이유는?',o:['① 놀란 마음은 피가 도는 상태를 직접 보여 주지 않아서','② 소리는 공기로 전달되지 않아서'],a:0}],
+ hint:'의학의 쇼크는 ‘마음’이 아니라 ‘피의 흐름’에 관한 말이에요.',
+ expl:'(1) X (2) ①. 피가 제대로 돌지 못했다는 의학적 근거가 따로 필요해요.',
+ clue:'‘쇼크의 진짜 뜻’ 카드: 의학의 쇼크 = 피가 잘 돌지 못해 피와 산소가 부족한 상태'},
+'1-4':{cat:'영어',title:'수사 단어 보관함',obj:'선반 위 보관함 세 개',
+ doc:`<h4>보관함 라벨</h4><p class="mono">EVIDENCE · RECORD · WITNESS</p><h4>카드</h4><p>① 사건을 직접 본 사람<br>② 사실을 보여 주는 증거<br>③ 적어 둔 문서·기록</p>`,
+ parts:[{t:'match',q:'(1) 카드를 알맞은 보관함에 넣어라.',items:['① 사건을 직접 본 사람','② 사실을 보여 주는 증거','③ 적어 둔 문서·기록'],targets:['EVIDENCE','RECORD','WITNESS'],a:[2,0,1]},
+        {t:'choice',q:'(2) 증거 없이 한 말이라면 빈칸에 알맞은 말은?  “The police ______ that he died of shock.”',o:['claimed','proved'],a:0,en:1}],
+ hint:'단어 리스트에서 claim과 prove의 뜻을 비교해 보세요.',
+ expl:'(1) ① WITNESS ② EVIDENCE ③ RECORD (2) claimed. 증명(prove)하려면 증거가 있어야 해요.',
+ clue:'표현 카드: The police claimed that ~'},
+'1-5':{cat:'영어',title:'확신의 정도 — must / may / can’t',obj:'벽의 인터폰',
+ doc:`<h4>조사실에서 들린 세 사람의 말</h4><p lang="en"><b>A. 상관</b> “It must be shock.”</p><p lang="en"><b>B. 동료</b> “It may be shock.”</p><p lang="en"><b>C. 의사</b> “It can’t be shock.”</p>`,
+ parts:[{t:'choice',q:'(1) ‘쇼크가 틀림없다’고 가장 강하게 확신하는 사람은?',o:['A. 상관','B. 동료','C. 의사'],a:0},
+        {t:'choice',q:'(2) ‘쇼크일 리가 없다’고 말하는 사람은?',o:['A. 상관','B. 동료','C. 의사'],a:2},
+        {t:'match',q:'(3) 지금은 증거가 거의 없다.  “We don’t have evidence yet. It ___(가)___ be shock, or it ___(나)___ not.”',items:['(가)','(나)'],targets:['must','may'],a:[1,1]}],
+ hint:'단어장 C의 ‘확신의 정도 사다리’를 보세요.',
+ expl:'(1) A (2) C (3) may, may. 증거 없이 must로 말한 상관의 말은 너무 강해요. 이 게임의 목표는 증거를 모아 may를 must나 can’t로 바꿀 수 있게 되는 것이에요.',
+ clue:'표현 카드: must / may / can’t'},
+/* ---------- 공간 2 ---------- */
+'2-1':{cat:'과학',title:'산소의 길',obj:'호흡 기관 모형',
+ doc:`<h4>카드 다섯 장</h4><p class="chips"><span>혈액</span><span>코·입</span><span>세포</span><span>기관</span><span>폐포</span></p>`,
+ parts:[{t:'order',q:'(1) 산소가 세포까지 가는 순서대로 카드를 놓아라.',items:['혈액','코·입','세포','기관','폐포'],a:['코·입','기관','폐포','혈액','세포']},
+        {t:'choice',q:'(2) 폐포에서 혈액으로 들어가는 기체는?',o:['산소','이산화탄소'],a:0}],
+ hint:'숨을 들이쉬면 공기가 코로 들어가요. 우리 몸이 필요한 기체는 무엇일까요?',
+ expl:'(1) 코·입 → 기관 → 폐포 → 혈액 → 세포 (2) 산소. 이산화탄소는 반대로 혈액에서 폐포로 나가요. 이 길 중 한 곳이라도 막히면 산소가 세포까지 가지 못해요.',
+ clue:'산소 길 카드: 코·입 → 기관 → 폐포 → 혈액 → 세포'},
+'2-2':{cat:'과학',title:'세포의 에너지 공장',obj:'현미경과 카드 더미',
+ doc:`<h4>세포 호흡</h4><p class="eq">영양소 + ( ① ) → 이산화탄소 + 물 + ( ② )</p><p class="muted">보기: 산소 / 에너지 / 질소</p>`,
+ parts:[{t:'match',q:'(1) 빈칸에 알맞은 말을 넣어라.',items:['①','②'],targets:['산소','에너지','질소'],a:[0,1]},
+        {t:'choice',q:'(2) 산소가 계속 부족하면 어떻게 될까?',o:['① 세포가 에너지를 만들기 어려워 몸이 제대로 일하지 못한다','② 세포가 에너지를 더 많이 만든다'],a:0}],
+ hint:'산소는 세포가 에너지를 만드는 데 꼭 필요해요.',
+ expl:'(1) ① 산소 ② 에너지 (2) ①. 뇌처럼 산소를 많이 쓰는 기관일수록 산소가 부족하면 금방 영향을 받아요.',
+ clue:'세포 호흡 카드: 영양소 + 산소 → 이산화탄소 + 물 + 에너지'},
+'2-3':{cat:'과학',title:'풍선 폐 모형',obj:'페트병 폐 모형',
+ doc:`<h4>모형 설명</h4><p>페트병 안에 풍선(폐)을 달고, 바닥에 고무막(횡격막)을 붙였다. 풍선은 빨대(기관)로 바깥과 이어져 있다.</p><svg class="fig" viewBox="0 0 200 150" aria-hidden="true"><path d="M70 20h60v20l12 12v80H58V52l12-12z" fill="none" stroke="currentColor" stroke-width="2"/><rect x="97" y="4" width="6" height="40" fill="currentColor" opacity=".7"/><ellipse cx="88" cy="80" rx="13" ry="20" fill="#c9705f" opacity=".85"/><ellipse cx="112" cy="80" rx="13" ry="20" fill="#c9705f" opacity=".85"/><path d="M58 132q42 14 84 0" fill="none" stroke="#c9a86a" stroke-width="3"/><text x="150" y="140" font-size="9" fill="currentColor">고무막</text><text x="108" y="12" font-size="9" fill="currentColor">빨대</text></svg>`,
+ parts:[{t:'choice',q:'(1) 고무막을 아래로 당길 때 풍선은?',o:['커진다','거의 그대로다'],a:0},
+        {t:'choice',q:'(2) 빨대 입구를 손가락으로 막고 고무막을 당길 때 풍선은?',o:['커진다','거의 그대로다'],a:1},
+        {t:'choice',q:'(3) (2)는 사람의 어떤 상황과 같을까?',o:['① 기도가 막혔다','② 피를 많이 흘렸다'],a:0}],
+ hint:'고무막을 당기면 병 안의 공간이 넓어져요. 그런데 공기가 들어올 길이 막혔다면?',
+ expl:'(1) 커진다 (2) 거의 그대로다 (3) ①. 숨을 쉬려고 해도 기도가 막히면 공기가 폐까지 들어가지 못해요.',
+ clue:'막힌 빨대 실험 결과: 기도가 막히면 공기가 폐에 들어가지 못한다'},
+'2-4':{cat:'과학',title:'고장 난 산소 배달 트럭',obj:'칠판의 트럭 그림',
+ doc:`<h4>산소 배달 모형</h4><p>트럭(피)이 산소 상자를 싣고 세포로 간다.<br><b>배달량 = 트럭 수 × 한 대에 실은 상자 수</b></p><table class="tbl"><tr><th>상태</th><th>어떤 일이 생겼나</th><th>트럭 수</th><th>한 대의 상자</th></tr><tr><td>정상</td><td>문제 없음</td><td>10</td><td>10</td></tr><tr><td>A</td><td>숨을 잘 못 쉼</td><td>10</td><td>4</td></tr><tr><td>B</td><td>피가 잘 돌지 못함</td><td>4</td><td>10</td></tr></table><p class="muted">수치는 모형용이며 실제 측정값이 아님</p>`,
+ parts:[{t:'code',q:'(1) 정상의 배달량은?',a:['100'],ph:'숫자',short:1},
+        {t:'code',q:'    A의 배달량은?',a:['40'],ph:'숫자',short:1},
+        {t:'code',q:'    B의 배달량은?',a:['40'],ph:'숫자',short:1},
+        {t:'match',q:'(2) 질식과 가까운 것, 쇼크와 가까운 것은?',items:['질식','쇼크'],targets:['A','B'],a:[0,1],btn:1},
+        {t:'choice',q:'(3) “A와 B는 배달량이 같으니 원인도 같다.”',o:['O','X'],a:1,ox:1}],
+ hint:'숨을 못 쉬면 트럭에 실을 산소가 줄고, 피가 잘 돌지 못하면 달리는 트럭이 줄어요.',
+ expl:'(1) 정상 100, A 40, B 40 (2) 질식 A, 쇼크 B (3) X. 둘 다 세포에 가는 산소가 줄지만 원인은 달라요. 원인을 알려면 숨과 피 흐름을 따로 확인해야 해요.',
+ clue:'★ 핵심 단서 · 질식 vs 쇼크 비교표 — 질식: 피에 실을 산소가 줄어듦(숨의 문제) / 쇼크: 산소를 나르는 피의 흐름이 줄어듦(피 흐름의 문제)'},
+'2-5':{cat:'과학+영어',title:'영어 과학 메모',obj:'게시판의 영어 메모',
+ doc:`<h4>Science memo</h4><p lang="en" class="en">Blood carries oxygen.<br>The heart pumps blood.</p><p class="muted">단어 도움: blood 피 / carry 운반하다 / oxygen 산소 / heart 심장 / pump 펌프처럼 밀어 보내다</p>`,
+ parts:[{t:'choice',q:'(1) 메모의 내용과 맞는 것은?',o:['① 심장은 산소를 만든다','② 피는 산소를 운반한다'],a:1},
+        {t:'match',q:'(2) 빈칸에 알맞은 단어를 넣어라.',items:['Asphyxia: The body cannot get ______.','Shock: ______ cannot move well.'],targets:['blood','oxygen'],a:[1,0],en:1}],
+ hint:'asphyxia는 ‘질식’, shock은 ‘쇼크’예요. 2-4의 A와 B를 떠올려 보세요.',
+ expl:'(1) ② (심장은 산소를 만들지 않고 피를 밀어 보내요) (2) oxygen / Blood',
+ clue:'단어 카드: asphyxia, oxygen, blood, shock (카드뉴스 ‘과학 설명’ 문장)'},
+/* ---------- 공간 3 ---------- */
+'3-1':{cat:'단서',title:'찢어진 의사의 메모',obj:'탁자 위 종이 조각',
+ doc:`<h4>현장에 처음 온 의사의 메모 조각</h4><p>조각 네 개가 섞여 있다. 그중 하나는 의사가 쓴 것이 아니라, 나중에 누군가 끼워 넣은 조각이다.</p><p class="hand">① “바닥이 물로 흥건함”<br>② “배가 불러 있음”<br>③ “청진기로 폐에서 물소리가 들림”<br>④ “특별한 이상 없음. 단순 쇼크로 보임”</p>`,
+ parts:[{t:'multi',q:'(1) 의사가 현장에서 직접 보고 들은 것(관찰)을 적은 조각을 모두 골라라.',o:['①','②','③','④'],a:[0,1,2]},
+        {t:'choice',q:'(2) ④는 어떤 종류의 문장일까?',o:['직접 보고 들은 것을 적은 관찰','관찰한 내용 없이 결론부터 내린 판단'],a:1}],
+ hint:'‘보였다·들렸다’처럼 눈과 귀로 확인한 내용인지, ‘~이다·~로 보인다’처럼 결론을 내린 판단인지 생각해 보세요.',
+ expl:'(1) ① ② ③ (2) 판단. ①②③은 의사가 직접 보고(바닥의 물, 불러 있는 배) 들은(폐의 물소리) 관찰이에요. ④는 아무 관찰 없이 ‘단순 쇼크’라고 결론부터 내린 판단이고, 다른 조각들과도 맞지 않아요.',
+ clue:'처음 온 의사는 물과 관련된 흔적을 보았다. (바닥의 물, 불러 있는 배, 폐의 물소리)'},
+'3-2':{cat:'영어',title:'관찰 기록 읽고 그림 고르기',obj:'라이트박스의 그림',
+ doc:`<h4>의사의 영어 관찰 기록</h4><p lang="en" class="en">(1) There was water on the floor.<br>(2) The doctor heard water in the lungs.</p>`,
+ parts:[{t:'choice',q:'(1) There was water on the floor.',pic:1,o:[{img:'P0',alt:'그림 1'},{img:'P1',alt:'그림 2'},{img:'P2',alt:'그림 3'}],a:1},
+        {t:'choice',q:'(2) The doctor heard water in the lungs.',pic:1,o:[{img:'P3',alt:'그림 1'},{img:'P4',alt:'그림 2'},{img:'P5',alt:'그림 3'}],a:2}],
+ hint:'There was ~ = ‘~이 있었다’, on the floor = ‘바닥 위에’, heard = ‘들었다’, lungs = ‘폐’. 물컵은 floor가 아니라 desk 위에 있어요.',
+ expl:'(1) 바닥에 물이 고여 있는 그림 (2) 청진기로 가슴 소리를 듣는 의사 그림',
+ clue:'표현 카드: There was water on the floor. / water in the lungs'},
+'3-3':{cat:'자료 판단',title:'관찰과 해석 나누기',obj:'두 칸짜리 분류함',
+ doc:`<h4>수사 수첩에 적힌 네 문장</h4><p>① 바닥이 물에 젖어 있었다.<br>② 의사가 폐에서 물소리를 들었다.<br>③ 이 관찰 결과는 숨쉬기에 문제가 있었을 가능성을 보여 준다.<br>④ 누군가 이 내용을 숨기려고 했을 것이다.</p>`,
+ parts:[{t:'match',q:'네 문장을 두 상자에 나눠 넣어라.',items:['① 바닥이 물에 젖어 있었다.','② 의사가 폐에서 물소리를 들었다.','③ 숨쉬기에 문제가 있었을 가능성을 보여 준다.','④ 누군가 이 내용을 숨기려고 했을 것이다.'],targets:['관찰','해석'],a:[0,0,1,1],btn:1}],
+ hint:'‘~였다’처럼 확인된 사실인지, ‘~가능성이 있다, ~했을 것이다’처럼 짐작한 것인지 확실한 정도를 비교해 보세요.',
+ expl:'관찰 — ① ② / 해석 — ③ ④. 특히 ④는 사람의 마음(의도)을 짐작한 것이라 다른 증거가 더 필요해요. 이 단서는 신문사 편집실(4-1)과 최종 수사실(5-2)에서 나와요.',
+ clue:'‘관찰 vs 해석’ 분류표: 본 것과 짐작한 것은 다르다'},
+'3-4':{cat:'자료 판단',title:'원본과 요약본 비교',obj:'나란히 펼친 두 서류철',real:1,
+ doc:`<div class="twin"><div><h4>원본 (부검 소견)</h4><p>목·가슴·아랫배 등 여러 곳에 멍 자국이 있음. 오른쪽 폐 아래쪽에 출혈 반점이 있음. 물고문 도중 질식한 것으로 보임.</p></div><div><h4>요약본</h4><p>특별한 외상 없음. 심장마비(쇼크사)로 판단됨.</p></div></div><p class="muted">※ 원본은 1987년 실제 부검 소견의 내용을 바탕으로 쉽게 다시 쓴 자료이고, 요약본은 게임 속 가상 자료예요.</p>`,
+ parts:[{t:'choice',q:'(1) 요약본에서 사라진 관찰은?',o:['① 목·가슴 등 여러 곳의 멍 자국','② 책상','③ 물컵'],a:0},
+        {t:'choice',q:'(2) 원본의 사인 소견은 요약본에서 어떻게 바뀌었나?',o:['‘질식한 것으로 보임’이 ‘심장마비(쇼크사)로 판단됨’으로 바뀌었다','그대로 남아 있다','‘더 조사해야 함’으로 바뀌었다'],a:0},
+        {t:'choice',q:'(3) 수사관이라면 어느 기록을 바탕으로 조사해야 할까?',o:['원본','요약본'],a:0}],
+ hint:'두 기록을 한 줄씩 나란히 읽어 보세요. 몸에서 직접 관찰한 내용이 요약본에 남아 있나요?',
+ expl:'(1) ① (2) ‘질식한 것으로 보임’이 ‘심장마비(쇼크사)’로 바뀌었다 (3) 원본. 요약본은 몸에서 관찰한 멍 자국과 폐의 출혈 반점을 지우고, 사인을 경찰 발표와 같은 쪽으로 바꿨어요.',
+ clue:'원본 기록 사본: 목·가슴·아랫배의 멍 자국, 오른쪽 폐의 출혈 반점, “질식한 것으로 보임”'},
+'3-5':{cat:'과학',title:'물은 어느 길로 들어갔을까?',obj:'목과 식도 해부도',
+ doc:`<h4>모형도</h4><p><b>음식의 길</b> 입 → 식도 → 위</p><p><b>공기의 길</b> 코·입 → 기관 → 폐</p>`,
+ parts:[{t:'choice',q:'(1) 의사가 ‘폐’에서 물소리를 들었다면, 물은 어느 길로 들어갔을까?',o:['음식의 길','공기의 길'],a:1},
+        {t:'choice',q:'(2) 음식을 삼킬 때 기관 입구를 덮어 주는 것은?',o:['① 후두덮개','② 횡격막','③ 심장'],a:0}],
+ hint:'물을 마시면 물은 식도를 지나 위로 가요.',
+ expl:'(1) 공기의 길 (2) ①. 폐에 물이 있다는 것은 물이 기관으로 들어갔다는 뜻이에요. 다만 이 하나만으로 사인을 확정하지는 않아요.',
+ clue:'음식의 길 vs 공기의 길 카드: 폐의 물 = 물이 기관으로 들어갔다'},
+/* ---------- 공간 4 ---------- */
+'4-1':{cat:'단서',title:'벽에 붙은 지시 쪽지',obj:'벽의 쪽지',
+ doc:`<h4>지시 쪽지</h4><p class="hand">“대학생 사망 기사는 작게 쓸 것. 반드시 ‘<b>ㅅㅋㅅ</b>’라고만 쓸 것.”</p>`,
+ parts:[{t:'code',q:'(1) 초성을 풀어라.',a:['쇼크사'],ph:'세 글자'},
+        {t:'choice',q:'(2) 이 쪽지 때문에 일어난 일은?',o:['① 기자들이 정해진 말만 쓸 수 있었다','② 기자들이 자유롭게 취재했다'],a:0}],
+ hint:'경찰 발표에 나온 말이에요.',
+ expl:'(1) 쇼크사 (2) ①',
+ clue:'이 세계의 신문은 막혀 있다. 바깥 세상(외신)에 알려야 한다.'},
+'4-2':{cat:'영어',title:'‘경찰이 말했다’를 남겨라',obj:'타자기에 끼운 원고',
+ doc:`<h4>원고 두 줄</h4><p lang="en" class="en">A. He died of shock.<br>B. The police claimed that he died of shock.</p><p class="muted">단어 도움: die of ~ ~로 죽다 / said 말했다</p>`,
+ parts:[{t:'choice',q:'아직 사실인지 모르는 경찰의 말을 기사에 쓸 때 더 알맞은 문장은?',o:['A','B'],a:1}],
+ hint:'어느 문장에 ‘누가 말했는지’가 들어 있나요?',
+ expl:'B. A는 기자가 사실이라고 말하는 문장이고, B는 경찰의 말이라는 것을 보여 줘요. According to the police(경찰에 따르면)도 같은 역할을 해요.',
+ clue:'표현 카드: The police said ~ / According to ~'},
+'4-3':{cat:'영어',title:'not이 바꾸는 뜻',obj:'편집장 책상의 메모',
+ doc:`<h4>편집장 메모</h4><p lang="en" class="en">The record does not confirm the police explanation.</p><p class="muted">단어 도움: record 기록 / confirm 확인해 주다 / explanation 설명</p>`,
+ parts:[{t:'choice',q:'(1) 알맞은 뜻은?',o:['① 기록은 경찰의 설명을 확인해 주지 않는다.','② 기록은 경찰의 설명을 확인해 준다.'],a:0},
+        {t:'order',q:'(2) 단어를 배열해 문장을 완성하라.  “경찰은 진실을 말하지 않았다.”',items:['did','the truth','not','The police','tell'],a:['The police','did','not','tell','the truth'],en:1}],
+ hint:'not은 ‘~하지 않다’예요. did not 다음에는 동사원형이 와요.',
+ expl:'(1) ① (2) The police did not tell the truth.',
+ clue:'표현 카드: does not show / did not tell'},
+'4-4':{cat:'과학+영어',title:'틀린 영어 설명 고치기',obj:'텔렉스 옆 틀린 메모',
+ doc:`<h4>틀린 메모</h4><p lang="en" class="en"><s>Shock means feeling surprised.</s></p><p class="muted">(쇼크는 놀라는 것이다.)</p><p class="muted">단어 도움: blood 피 / oxygen 산소 / surprise 놀람 / noise 소음 / news 소식</p>`,
+ parts:[{t:'choice',q:'(1) 이 메모가 과학적으로 틀린 이유는?',o:['① 의학의 쇼크는 마음의 상태가 아니라, 피가 몸을 잘 돌지 못하는 몸의 상태라서','② surprised의 철자가 틀려서','③ shock은 ‘질식’이라는 뜻이라서'],a:0},
+        {t:'multi',q:'(2) 과학적으로 맞게 고친 문장의 빈칸 두 개에 들어갈 단어를 골라라.  “In shock, the body does not get enough ______ and ______.”',o:['blood','oxygen','surprise','noise','news'],a:[0,1],en:1}],
+ hint:'1-3의 용어 카드와 2-4의 B(피가 잘 돌지 못함)를 떠올려 보세요. 피가 잘 돌지 못하면 세포에 무엇이 부족해질까요?',
+ expl:'(1) ① (2) blood, oxygen. 의학의 쇼크는 놀라는 마음이 아니라, 피가 잘 돌지 못해 몸에 피와 산소가 부족한 상태예요. surprise, noise, news는 몸속에서 운반되는 것이 아니에요.',
+ clue:'고친 과학 문장: In shock, the body does not get enough blood and oxygen.'},
+'4-5':{cat:'영어',title:'카드뉴스 핵심 단어',obj:'단어 상자와 금고',
+ doc:`<h4>편집실 단어장</h4><p lang="en" class="mono">truth · hide · report · autopsy · asphyxia</p><p class="muted">모두 맞추면 금고가 열려요.</p>`,
+ parts:[{t:'match',q:'단어와 뜻을 짝지어라.',items:['truth','hide','report','autopsy','asphyxia'],targets:['질식','진실','부검','숨기다','알리다·보도하다'],a:[1,3,4,2,0],en:1}],
+ hint:'autopsy와 asphyxia는 앞에서 본 단어예요.',
+ expl:'truth-진실, hide-숨기다, report-알리다·보도하다, autopsy-부검, asphyxia-질식. 이 단어들은 영어 2차시 기사 읽기와 3차시 카드뉴스에 다시 나와요.',
+ clue:'증거 봉투 ‘News Words’: truth, hide, report, autopsy, asphyxia'},
+/* ---------- 공간 5 ---------- */
+'5-1':{cat:'자료 판단',title:'봉인된 목격 진술서',obj:'봉인된 봉투',
+ doc:`<h4>목격 진술서 (W-1)</h4><p class="hand">“조사 중에 가혹행위가 있었다. 나는 그가 숨을 쉬기 힘들어하는 것을 보았다. 그 뒤 그가 쓰러졌다.”</p>`,
+ parts:[{t:'choice',q:'이 진술서로 바로 알 수 있는 것은?',o:['① 그가 숨을 쉬기 힘들어했다는 목격 내용','② 의학적으로 확정된 사망 원인'],a:0}],
+ hint:'목격자는 본 것을 말해요. 사망 원인은 의학적 기록으로 확인해요.',
+ expl:'①. 진술 하나만으로는 사망 원인을 확정할 수 없어서, 다른 기록과 함께 봐야 해요.',
+ clue:'W-1 진술 요약 카드: 숨을 쉬기 힘들어하는 것을 보았다'},
+'5-2':{cat:'자료 판단',title:'증거판 총정리',obj:'최종 증거판',
+ doc:`<h4>최종 증거판</h4><p>A. 의사의 메모 (3-1): 폐에서 물소리<br>B. 원본 기록 (3-4): 목·가슴 등 여러 곳의 멍 자국<br>C. 원본 기록 (3-4): 오른쪽 폐의 출혈 반점<br>D. 목격 진술서 W-1 (5-1): 숨을 쉬기 힘들어함<br>E. 새 지시문: “숨과 관련된 내용은 발표에서 빼라.”</p>`,
+ parts:[{t:'match',q:'(1) 각 증거가 무엇을 보여 주는지 짝지어라.',items:['A. 폐에서 물소리','B. 목·가슴 등의 멍 자국','C. 폐의 출혈 반점','D. 숨을 쉬기 힘들어함','E. 숨 관련 내용을 빼라는 지시'],targets:['숨쉬기가 어려운 상태였다는 목격','물이 공기의 길(기관)로 들어갔다','정보를 숨기려 한 흔적','몸에 강한 힘이 가해졌다(목이 눌렸을 수 있다)','숨 쉬는 기관(폐)에 이상이 생겼다'],a:[1,3,4,0,2]},
+        {t:'choice',q:'(2) 몸에 대한 증거 A~D가 함께 가리키는 것은?',o:['호흡(숨)의 문제 — 산소가 폐로 들어가지 못했다','순환(피 흐름)의 문제 — 피가 몸을 돌지 못했다','소화의 문제 — 음식이 위로 가지 못했다'],a:0},
+        {t:'choice',q:'(3) 증거 E는 사망 원인을 직접 증명할까?',o:['그렇다. 숨기려 했으니 질식사가 확실하다','아니다. 숨기려 한 흔적일 뿐, 사망 원인은 몸에 대한 증거로 판단해야 한다'],a:1}],
+ hint:'2-1의 ‘산소의 길’을 떠올려 보세요. 폐는 숨 쉬는 기관이고, 물은 원래 공기의 길로 들어가면 안 돼요.',
+ expl:'(1) A-물이 기관으로 들어감, B-강한 힘이 가해짐(목 눌림 가능성), C-폐에 이상, D-숨쉬기 곤란 목격, E-숨기려 한 흔적 (2) 호흡의 문제 (3) 아니다. 서로 다른 자료 A~D가 모두 숨의 문제를 가리키고, 쇼크(순환 문제)를 받쳐 주는 의학 기록은 없어요. E는 진실을 숨기려 한 정황이지만 사망 원인 자체의 증거는 아니에요.',
+ clue:'최종 증거 정리표: 폐의 물소리=공기의 길로 물이 들어감, 멍 자국=강한 힘(목 눌림 가능성), 폐의 출혈 반점=폐에 이상, 진술=숨쉬기 곤란 → 모두 호흡의 문제를 가리킨다'},
+'5-3':{cat:'과학',title:'질식은 이렇게 일어난다',obj:'책상 위 흐름 카드',
+ doc:`<h4>섞인 카드</h4><p>(가) 혈액 속 산소가 줄어든다<br>(나) 물에 잠기거나 목이 눌려 기도가 막힌다<br>(다) 세포가 에너지를 못 만들어 뇌와 심장이 제대로 일하지 못한다<br>(라) 폐로 산소가 들어가지 못한다</p>`,
+ parts:[{t:'order',q:'일어나는 순서대로 배열하라.',items:['(가) 혈액 속 산소가 줄어든다','(나) 기도가 막힌다','(다) 세포가 에너지를 못 만든다','(라) 폐로 산소가 들어가지 못한다'],a:['(나) 기도가 막힌다','(라) 폐로 산소가 들어가지 못한다','(가) 혈액 속 산소가 줄어든다','(다) 세포가 에너지를 못 만든다']}],
+ hint:'2-1의 ‘산소의 길’을 따라가 보세요.',
+ expl:'(나) → (라) → (가) → (다)',
+ clue:'질식 흐름도: 기도 막힘 → 폐에 산소 못 들어감 → 혈액 속 산소 감소 → 세포 에너지 부족'},
+'5-4':{cat:'과학',title:'상관의 반론에 답하기',obj:'울리는 전화기',
+ doc:`<h4>전화 너머 상관의 말</h4><p class="hand">“놀라서 심장이 멈췄을 수도 있잖아?”</p>`,
+ parts:[{t:'choice',q:'(1) “쇼크사의 증거가 부족하면 자동으로 질식사가 맞다.”',o:['O','X'],a:1,ox:1},
+        {t:'choice',q:'(2) 상관에게 답할 가장 좋은 근거는?',o:['① 쇼크(피 흐름의 문제)를 받쳐 주는 의학 기록은 없고, 숨의 문제를 가리키는 서로 다른 증거(폐의 물소리, 폐의 출혈 반점, 멍 자국, 진술)는 여러 개다','② 경찰 발표문에 ‘쇼크사’라고 적혀 있으니, 쇼크사로 보는 것이 맞다','③ 목격자 한 명이 숨쉬기 힘들어하는 모습을 봤으니, 그 진술 하나만으로 질식사가 확정된다','④ 사람은 놀라면 심장이 빨리 뛰므로, 놀람이 쇼크를 일으켰을 가능성이 가장 높다'],a:0}],
+ hint:'발표는 사실과 다르고(1-2), 증거 하나로는 확정할 수 없고(5-1), 일상의 놀람과 의학의 쇼크는 달라요(1-3).',
+ expl:'(1) X. 질식사도 따로 증거가 있어야 해요. (2) ①. ②는 발표를 사실로 착각했고, ③은 증거 하나로 단정했고, ④는 일상의 ‘놀람’과 의학의 ‘쇼크’를 섞었어요. 의사의 메모, 원본 기록, 목격 진술처럼 서로 다른 자료가 같은 쪽을 가리킬수록 믿을 만해져요.',
+ clue:'반박 카드: 서로 다른 자료가 같은 쪽을 가리킬수록 믿을 만하다'},
+'5-5':{cat:'통합',title:'최종 보고서와 기록 수정',obj:'백과사전 단말기',
+ doc:`<h4>독립 검토 결과</h4><p>“원본 기록, 의사의 관찰, 목격 진술을 함께 보면, 가혹행위로 숨이 막혀 생긴 질식사라는 설명이 가장 잘 맞는다.”</p><h4>2026년 평행세계 백과사전</h4><p lang="en" class="mono">Cause of death: shock</p>`,
+ parts:[{t:'match',q:'(1) 보고서를 완성하라. “사망 원인은 ( ① )이다. 증거는 폐의 물소리, 폐의 출혈 반점, ( ② ), 숨을 쉬기 힘들어했다는 진술이다. 기도가 막히면 ( ③ )가 세포에 가지 못해 세포가 ( ④ )를 만들지 못한다.”',items:['①','②','③','④'],targets:['산소','질식','에너지','목·가슴 등의 멍 자국'],a:[1,3,0,2]},
+        {t:'order',q:'(2) 섞인 글자를 배열해 백과사전을 고쳐라.  Cause of death: ________',items:['X','P','A','I','H','S','Y','A'],a:['A','S','P','H','Y','X','I','A'],letters:1}],
+ hint:'(2)는 2-5에서 본 ‘질식’의 영어 단어예요. A로 시작해요.',
+ expl:'(1) ① 질식 ② 목·가슴 등의 멍 자국 ③ 산소 ④ 에너지 (2) ASPHYXIA → “Cause of death: asphyxia”',
+ clue:'백과사전 수정: Cause of death: asphyxia'}
+};
+
+const WORDS = [
+ ['evidence','증거'],
+ ['record','기록'],
+ ['witness','목격자'],
+ ['claim (claimed)','주장하다 (주장했다)'],
+ ['prove (proved)','증명하다 (증명했다)'],
+ ['must','~임에 틀림없다 (강한 확신)'],
+ ['may','~일지도 모른다 (가능성)'],
+ ['can’t','~일 리가 없다 (강한 부정)'],
+ ['blood','피'],
+ ['heart','심장'],
+ ['oxygen','산소'],
+ ['carry','운반하다'],
+ ['pump','펌프처럼 밀어 보내다'],
+ ['asphyxia','질식'],
+ ['shock','(의학) 쇼크'],
+ ['floor','바닥'],
+ ['lungs','폐'],
+ ['hear (heard)','듣다 (들었다)'],
+ ['neck','목'],
+ ['chest','가슴'],
+ ['bruise','멍'],
+ ['bleeding','출혈'],
+ ['findings','관찰·검사 결과'],
+ ['suggest','(가능성을) 나타내다, 시사하다'],
+ ['die of ~','~로 죽다'],
+ ['according to ~','~에 따르면'],
+ ['confirm','확인해 주다'],
+ ['explanation','설명'],
+ ['truth','진실'],
+ ['hide','숨기다'],
+ ['report','알리다, 보도하다'],
+ ['autopsy','부검'],
+ ['cause of death','사망 원인']
+];
+
+</script>
+<script>
+/* ===== Image-based 2.5D rooms: Higgsfield panoramas on a curved screen ===== */
+const World = (() => {
+let renderer, scene, cam, mat, dust, IM = {}, roomIndex = 0, enabled = false;
+const R = 10, T = 2.6, ASP = 2400 / 1029, H = R * T / ASP, N = 520;
+let yaw = 0, pitch = 0, tYaw = 0, tPitch = 0, yawMax = 0, pitchMax = 0, mx = 0, my = 0, flick = 1;
+let stateFn = () => 'locked', onPick = () => {}, promptCb = () => {}, onNav = () => {}, navHot = () => false, viewIndex = 0, fovAnim = null, baseFov = 50;
+const keys = {}, virt = {}, tex = {};
+let spots = [], hot, dv;
+const clamp = (v, a) => Math.max(-a, Math.min(a, v));
+function init(canvas, images) {
+  IM = images;
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.outputEncoding = THREE.sRGBEncoding;
+  scene = new THREE.Scene(); scene.background = new THREE.Color(0x05090a);
+  cam = new THREE.PerspectiveCamera(50, 1, .1, 100); cam.rotation.order = 'YXZ';
+  mat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0xffffff });
+  scene.add(new THREE.Mesh(new THREE.CylinderGeometry(R, R, H, 120, 1, true, Math.PI - T / 2, T), mat));
+  const capMat = new THREE.MeshBasicMaterial({ color: 0x060a09, side: THREE.DoubleSide });
+  [-1, 1].forEach(s => { const c = new THREE.Mesh(new THREE.CircleGeometry(R, 64), capMat); c.rotation.x = Math.PI / 2; c.position.y = s * H / 2; scene.add(c) });
+  const g = new THREE.BufferGeometry(); const dp = new Float32Array(N * 3); dv = new Float32Array(N);
+  for (let i = 0; i < N; i++) { const a = Math.PI + (Math.random() - .5) * T, r = 1.5 + Math.random() * 7.5; dp[i * 3] = Math.sin(a) * r; dp[i * 3 + 1] = (Math.random() - .5) * H * .9; dp[i * 3 + 2] = Math.cos(a) * r; dv[i] = .002 + Math.random() * .006 }
+  g.setAttribute('position', new THREE.BufferAttribute(dp, 3));
+  const dc = document.createElement('canvas'); dc.width = dc.height = 32; const dx = dc.getContext('2d'); const gr = dx.createRadialGradient(16, 16, 0, 16, 16, 16); gr.addColorStop(0, 'rgba(255,240,210,.9)'); gr.addColorStop(1, 'rgba(255,240,210,0)'); dx.fillStyle = gr; dx.fillRect(0, 0, 32, 32);
+  dust = new THREE.Points(g, new THREE.PointsMaterial({ size: .07, map: new THREE.CanvasTexture(dc), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .55 })); scene.add(dust);
+  hot = document.getElementById('hot');
+  addEventListener('resize', resize); resize();
+  let drag = null;
+  canvas.addEventListener('pointerdown', e => { if (!enabled) return; drag = { x: e.clientX, y: e.clientY, yaw: tYaw, pitch: tPitch }; canvas.setPointerCapture(e.pointerId); canvas.classList.add('drag') });
+  canvas.addEventListener('pointermove', e => { mx = e.clientX / innerWidth * 2 - 1; my = e.clientY / innerHeight * 2 - 1; if (!drag) return; const k = (cam.fov * Math.PI / 180) / innerHeight; tYaw = clamp(drag.yaw + (e.clientX - drag.x) * k, yawMax); tPitch = clamp(drag.pitch + (e.clientY - drag.y) * k, pitchMax) });
+  const end = () => { drag = null; canvas.classList.remove('drag') }; canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('wheel', e => { if (!enabled) return; tYaw = clamp(tYaw + e.deltaY * .0012 + e.deltaX * .0012, yawMax); e.preventDefault() }, { passive: false });
+  addEventListener('keydown', e => { if (!enabled || isTyping(e)) return; const k = e.key.toLowerCase(); if (['1', '2', '3'].includes(k)) { onNav(+k - 1); return } keys[k] = true; if (k.startsWith('arrow')) e.preventDefault(); if (k === 'e' || k === 'enter') interactNearest() });
+  addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false });
+  addEventListener('blur', () => Object.keys(keys).forEach(k => keys[k] = false));
+  requestAnimationFrame(loop);
+}
+function isTyping(e) { const t = e.target; return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') }
+function resize() {
+  if (!renderer) return; const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); cam.aspect = w / h;
+  const maxH = T * .94; let vf = 50 * Math.PI / 180; const hf = 2 * Math.atan(Math.tan(vf / 2) * cam.aspect); if (hf > maxH) vf = 2 * Math.atan(Math.tan(maxH / 2) / cam.aspect);
+  if (cam.aspect < .9) vf = Math.min(vf, 2 * Math.atan(H / 2 / R) * .92);
+  cam.fov = baseFov = vf * 180 / Math.PI; cam.updateProjectionMatrix();
+  const hf2 = 2 * Math.atan(Math.tan(vf / 2) * cam.aspect); yawMax = Math.max(0, T / 2 - hf2 / 2 - .015); pitchMax = Math.max(0, Math.atan(H / 2 / R) - vf / 2 - .01);
+}
+function getTex(k) { if (tex[k]) return tex[k]; const t = new THREE.Texture(IM[k]); t.needsUpdate = true; t.encoding = THREE.sRGBEncoding; t.repeat.x = -1; t.offset.x = 1; t.minFilter = THREE.LinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return tex[k] = t }
+function uvToWorld(u, v, r = R * .93) { const th = Math.PI + T / 2 - u / 100 * T; return new THREE.Vector3(Math.sin(th) * r, H / 2 - v / 100 * H, Math.cos(th) * r) }
+function yawFor(u) { return clamp(T / 2 - u / 100 * T, yawMax) }
+function build(i, vi = 0) {
+  roomIndex = i; viewIndex = vi; const rm = ROOMS[i], view = rm.views[vi]; mat.map = getTex(view.img); mat.needsUpdate = true; resize();
+  hot.innerHTML = ''; spots = [];
+  Object.entries(view.spots || {}).forEach(([id, [u, v]]) => { const b = document.createElement('button'); b.className = 'hs'; b.dataset.id = id; b.innerHTML = `<span class="ring">${id}</span><span class="lab">${Q[id].obj}</span>`; b.onclick = () => onPick(id, true); hot.appendChild(b); spots.push({ b, p: uvToWorld(u, v), id, u }) });
+  if (view.door) { const d = document.createElement('button'); d.className = 'hs door'; d.dataset.id = 'door'; d.innerHTML = `<span class="ring">${i === 4 ? '열쇠' : '문'}</span><span class="lab">${i === 4 ? '금고 문 · 다섯 글자 잠금' : '다음 공간으로 가는 문'}</span>`; d.onclick = () => onPick('door', true); hot.appendChild(d); spots.push({ b: d, p: uvToWorld(view.door[0], view.door[1]), id: 'door', u: view.door[0] }) }
+  (view.nav || []).forEach(([to, u, v]) => { const b = document.createElement('button'); b.className = 'hs nav'; b.dataset.id = 'nav' + to; b.innerHTML = `<span class="ring">➜</span><span class="lab">${rm.views[to].name}(으)로 가기</span>`; b.onclick = () => onNav(to); hot.appendChild(b); spots.push({ b, p: uvToWorld(u, v), id: 'nav' + to, u, nav: to }) });
+  const first = spots.find(s => s.nav != null ? navHot(s.nav) : stateFn(s.id) === 'next' || stateFn(s.id) === 'door');
+  tYaw = yaw = first ? yawFor(first.u) * .7 : 0; tPitch = pitch = 0;
+  refreshMarkers();
+}
+function moveTo(cb, u) { // short "walking" zoom toward a point, then swap view
+  if (u != null) tYaw = yawFor(u);
+  fovAnim = { a: cam.fov, b: cam.fov * .62, t0: performance.now(), d: 420, done: () => { cb(); cam.fov = baseFov * .8; cam.updateProjectionMatrix(); fovAnim = { a: cam.fov, b: baseFov, t0: performance.now(), d: 380 } } };
+  const bl = document.getElementById('blink'); if (bl) { bl.style.transition = 'opacity .35s'; bl.style.opacity = 1; setTimeout(() => { bl.style.opacity = 0 }, 470) }
+}
+function refreshMarkers() { spots.forEach(s => { if (s.nav != null) { s.b.classList.toggle('next', navHot(s.nav)); return } const st = stateFn(s.id); s.b.classList.toggle('done', st === 'done'); s.b.classList.toggle('locked', st === 'locked'); s.b.classList.toggle('next', st === 'next'); s.b.setAttribute('aria-label', s.id === 'door' ? (st === 'locked' ? '문 (잠김)' : '문') : `${s.id} ${Q[s.id].obj}${st === 'done' ? ' (해결)' : st === 'locked' ? ' (잠김)' : ''}`) }) }
+const v3 = new THREE.Vector3();
+let lastNear = null;
+function nearest() { // hotspot closest to the screen centre
+  let best = null, bd = .42; spots.forEach(s => { if (s._x == null || s.nav != null) return; const d = Math.hypot(s._x, s._y * .6); if (d < bd) { bd = d; best = s.id } }); return best;
+}
+function interactNearest() { const n = nearest(); if (n) onPick(n, true) }
+function loop(now) {
+  requestAnimationFrame(loop); if (!renderer) return;
+  const dt = .016;
+  if (enabled) {
+    const turn = (keys.a || keys.arrowleft || virt.tl ? 1 : 0) - (keys.d || keys.arrowright || virt.tr ? 1 : 0);
+    const tilt = (keys.w || keys.arrowup || virt.f ? 1 : 0) - (keys.s || keys.arrowdown || virt.b ? 1 : 0);
+    if (turn) tYaw = clamp(tYaw + turn * dt * 1.2, yawMax);
+    if (tilt) tPitch = clamp(tPitch + tilt * dt * .6, pitchMax);
+  }
+  if (fovAnim) { const k = Math.min(1, (now - fovAnim.t0) / fovAnim.d); const e = k * k * (3 - 2 * k); cam.fov = fovAnim.a + (fovAnim.b - fovAnim.a) * e; cam.updateProjectionMatrix(); if (k >= 1) { const f = fovAnim; fovAnim = null; f.done && f.done() } }
+  yaw += (tYaw - yaw) * .12; pitch += (tPitch - pitch) * .12;
+  cam.rotation.set(pitch, yaw, 0); cam.position.set(mx * .18, -my * .08, 0);
+  const p = dust.geometry.attributes.position; for (let i = 0; i < N; i++) { p.array[i * 3 + 1] += dv[i]; if (p.array[i * 3 + 1] > H * .45) p.array[i * 3 + 1] = -H * .45 } p.needsUpdate = true;
+  if (roomIndex === 0 && Math.random() < .012) flick = .72 + Math.random() * .2; flick += (1 - flick) * .15; mat.color.setScalar(roomIndex === 0 ? flick : 1);
+  renderer.render(scene, cam);
+  const w = innerWidth, h = innerHeight;
+  spots.forEach(s => { v3.copy(s.p).project(cam); const vis = v3.z < 1 && Math.abs(v3.x) < 1.15 && Math.abs(v3.y) < 1.15 && !hot.hidden; s.b.style.display = vis ? '' : 'none'; s._x = vis ? v3.x : null; s._y = v3.y; if (vis) { s.b.style.left = ((v3.x + 1) / 2 * w) + 'px'; s.b.style.top = ((1 - v3.y) / 2 * h) + 'px' } });
+  const n = enabled ? nearest() : null; spots.forEach(s => s.b.classList.toggle('aim', s.id === n)); promptCb(n);
+}
+return {
+  init, build, refreshMarkers, moveTo, view: () => viewIndex, onNav: f => onNav = f, setNavHot: f => navHot = f,
+  setEnabled: v => { enabled = v; if (hot) hot.hidden = !v && document.getElementById('hud').hidden; if (!v) Object.keys(keys).forEach(k => keys[k] = false) },
+  setStateFn: f => stateFn = f, onPick: f => onPick = f, onPrompt: f => promptCb = f,
+  setVirtual: (k, v) => virt[k] = v, interactNearest,
+  faceSpot: id => { const s = spots.find(s => s.id === id); if (s) tYaw = yawFor(s.u) },
+};
+})();
+
+</script>
+<script>
+(() => {
+const $ = s => document.querySelector(s), el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ORDER = Object.keys(Q);
+let TEACHER = location.hash === '#teacher';
+const TEACHER_PW = '7891';
+const LS = 'esc87v2_';
+const SCI = new Set(['1-3', '2-1', '2-2', '2-3', '2-4', '2-5', '3-1', '3-4', '3-5', '4-4', '5-1', '5-2', '5-3', '5-4', '5-5']);
+
+/* ---------------- state ---------------- */
+let S = null;
+function fresh(cls, no, name) { return { cls, no, name, room: 0, solved: {}, clues: [], hints: 0, wrong: 0, t0: Date.now(), cleared: [], done: false, signed: false, signName: '', signedAt: 0, nb: emptyNb(), seenTip: 0 } }
+function emptyNb() { return { summary: '', claim: '', conf: '', ev: [{ t: '', m: '' }, { t: '', m: '' }, { t: '', m: '' }], sci: '', hide: '', en: '' } }
+const skey = (cls, no) => cls + '_' + no;
+function save() { if (!S) return; S.lastAt = Date.now(); try { localStorage.setItem(LS + skey(S.cls, S.no), JSON.stringify(S)); localStorage.setItem(LS + 'last', skey(S.cls, S.no)) } catch (e) { } Sync.push() }
+function load(no) { try { const s = JSON.parse(localStorage.getItem(LS + no) || 'null'); return s && typeof s.room === 'number' ? s : null } catch (e) { return null } }
+
+/* ---------------- sync (db) ---------------- */
+const Sync = {
+  db: null, uid: null, state: 'off', busy: false, again: false, marked: false, timer: 0,
+  init() { return this.p || (this.p = this._init()) },
+  mode: 'claude',
+  async _init() {
+    if (/^https?:/.test(location.protocol)) { try { const r = await fetch('api/health', { cache: 'no-store' }); if (r.ok && (await r.json()).ok) { this.mode = 'api'; this.state = 'on'; badge(); if (S) this.push(); return } } catch (e) { } }
+    for (let i = 0; i < 30 && !(window.claude && window.claude.use); i++) await new Promise(r => setTimeout(r, 200));
+    if (!(window.claude && window.claude.use)) { this.state = 'off'; badge(); return }
+    try {
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      this.db = db; this.user = user;
+      if (user) { try { this.uid = await user.id() } catch (e) { } }
+      this.state = db && this.uid ? 'on' : 'off';
+    } catch (e) { this.state = 'off' }
+    badge(); if (S) this.push();
+  },
+  push() { if (this.state !== 'on' || !S) return; clearTimeout(this.timer); this.timer = setTimeout(() => this.flush(), 700) },
+  async flush() {
+    if (this.busy) { this.again = true; return }
+    this.busy = true;
+    try {
+      if (this.mode === 'api') { const r = await fetch('api/progress', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(summary()) }); if (!r.ok) throw { code: r.status }; if (this.state !== 'on') { this.state = 'on'; badge() } this.busy = false; if (this.again) { this.again = false; this.flush() } return }
+      const ref = this.db.doc('progress/' + this.uid), patch = { ['r_' + safeId(skey(S.cls, S.no))]: summary(), u: Date.now() };
+      if (this.marked) await ref.update(patch);
+      else { const cur = await ref.get(); if (cur.exists) await ref.update(patch); else await ref.set(patch); this.marked = true }
+      if (this.state !== 'on') { this.state = 'on'; badge() }
+    } catch (e) { this.state = 'err'; badge(); console.warn('sync', e && e.code) }
+    this.busy = false; if (this.again) { this.again = false; this.flush() }
+  }
+};
+function safeId(s) { return String(s).replace(/[^0-9A-Za-z_-]/g, '_').slice(0, 40) || 'unknown' }
+function summary(st = S, upd = Date.now()) {
+  return { cls: st.cls || '', no: st.no, name: st.name, room: st.room, solved: Object.keys(st.solved).filter(k => st.solved[k] === 1), revealed: Object.keys(st.solved).filter(k => st.solved[k] === 'r'), hints: st.hints, wrong: st.wrong, t0: st.t0, updated: upd, done: !!st.done, cleared: st.cleared, signed: !!st.signed, signName: st.signName || '', signedAt: st.signedAt || 0, nb: st.nb };
+}
+function badge() { const b = $('#who'); if (!b || !S) return; const st = Sync.state; b.innerHTML = `<b>${esc(S.cls)}반 ${esc(S.no)}번 ${esc(S.name)}</b><span class="sync ${st === 'on' ? 'on' : st === 'err' ? 'err' : 'off'}" title="${st === 'on' ? '진행 상황이 선생님 화면에 보내지고 있어요' : st === 'err' ? '선생님 화면에 보내지 못했어요. 이 기기에는 저장돼요' : '이 기기에만 저장돼요'}">${st === 'on' ? '● 전송 중' : st === 'err' ? '전송 안 됨' : '이 기기 저장'}</span>` }
+
+/* ---------------- 3D world ---------------- */
+const imgEls = {};
+const ready = Promise.all(Object.entries(IMGS).map(([k, src]) => new Promise(res => { const im = new Image(); im.onload = () => res(); im.onerror = () => res(); im.src = src; imgEls[k] = im })));
+function roomIds(i = S.room) { return Object.keys(ROOMS[i].spots).sort() }
+function nextId() { return roomIds().find(id => !S.solved[id]) }
+function spotState(id) { if (id === 'door') return nextId() ? 'locked' : 'door'; if (S.solved[id]) return 'done'; return id === nextId() ? 'next' : 'locked' }
+let worldReady = false;
+ready.then(() => {
+  World.init($('#cv'), imgEls); World.setStateFn(spotState); World.setNavHot(to => viewOf(target()) === to && World.view() !== to); World.onNav(to => goView(to));
+  World.onPick(id => { if (id === 'door') clickDoor(); else clickSpot(id) });
+  let last = '';
+  World.onPrompt(id => {
+    const p = $('#prompt'); const key = id ? id + spotState(id) : '';
+    if (key === last) return; last = key;
+    if (!id) { p.hidden = true; return }
+    p.hidden = false; const st = spotState(id);
+    if (id === 'door') { p.className = st === 'locked' ? 'locked' : ''; p.innerHTML = st === 'locked' ? `문이 잠겨 있다 · 남은 단서 ${roomIds().filter(i => !S.solved[i]).length}개` : `<kbd>E</kbd>${S.room === 4 ? '금고 문 열기' : '다음 공간으로'}` }
+    else if (st === 'locked') { p.className = 'locked'; p.innerHTML = `${id} ${Q[id].obj} · 먼저 ${nextId()}부터` }
+    else { p.className = ''; p.innerHTML = `<kbd>E</kbd>${id} ${Q[id].obj} ${st === 'done' ? '다시 보기' : '조사하기'}` }
+  });
+  $('#prompt').onclick = () => World.interactNearest();
+  worldReady = true;
+});
+function setPlay(on) { World.setEnabled(on && !$('#modalRoot').firstChild && !$('#drawerRoot').firstChild && !$('#hud').hidden) }
+
+/* ---------------- UI helpers ---------------- */
+let toastT; function toast(m) { const t = $('#toast'); t.innerHTML = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600) }
+function closeModal() { $('#modalRoot').innerHTML = ''; setPlay(true) }
+function overlay(inner, onClose, narrow) { $('#modalRoot').innerHTML = ''; World.setEnabled(false); const o = el('div', 'overlay'); o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); const s = el('div', 'sheet' + (narrow ? ' narrow' : '')); s.appendChild(inner); o.appendChild(s); o.addEventListener('click', e => { if (e.target === o && onClose) onClose() }); $('#modalRoot').appendChild(o); setTimeout(() => { const f = s.querySelector('button.primary,input,button'); f && f.focus() }, 30); return s }
+function closeDrawer() { $('#drawerRoot').innerHTML = ''; setPlay(true) }
+addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('.drawer')) { closeDrawer(); return } const x = $('.overlay .x'); x && x.click() } });
+function target() { return nextId() || 'door' }
+function viewOf(id) { const vs = ROOMS[S.room].views; const i = vs.findIndex(v => id === 'door' ? v.door : v.spots && v.spots[id]); return i < 0 ? 0 : i }
+function goView(to, after) { const vs = ROOMS[S.room].views; if (to < 0 || to >= vs.length) return; if (to === World.view()) { after && after(); return } const nav = (vs[World.view()].nav || []).find(n => n[0] === to); World.moveTo(() => { S.view = to; save(); World.build(S.room, to); refreshHud(); after && after() }, nav ? nav[1] : null) }
+function refreshViews() { const vs = ROOMS[S.room].views, cur = World.view(), tv = viewOf(target()); $('#views').innerHTML = vs.map((v, i) => `<button data-v="${i}" aria-pressed="${i === cur}" class="${i === tv && i !== cur ? 'hot' : ''}"><kbd>${i + 1}</kbd>${i === 0 ? '방 전체' : v.name}</button>`).join(''); $('#views').querySelectorAll('button').forEach(b => b.onclick = () => goView(+b.dataset.v)) }
+function refreshHud() {
+  const nx = nextId(); const rm = ROOMS[S.room]; const tv = viewOf(target()); const where = tv !== World.view() ? ` <span class="where">→ ‘${rm.views[tv].name}’에 있다</span>` : '';
+  $('#task').innerHTML = (nx ? `<b>${nx}</b> ${Q[nx].obj}을(를) 찾아 조사하자.${where} <span style="color:var(--muted)">· ${rm.goal}</span>` : S.room === 4 ? `<b>FINAL</b> 금고 문에 다섯 공간의 열쇠 글자를 입력하라.${where}` : `<b>CLEAR</b> 문이 열렸다. 빨간 표시가 있는 문으로 가자.${where}`) + `<span class="help">화면 끌기 · <kbd>A</kbd><kbd>D</kbd> 둘러보기 · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 위치 이동 · 표시 클릭 또는 가운데에 맞추고 <kbd>E</kbd></span>`;
+  $('#clueN').textContent = S.clues.length;
+  $('#keys').innerHTML = ROOMS.map((r, i) => `<span class="${S.cleared.includes(i) ? 'on' : ''}" title="공간 ${i + 1}">${S.cleared.includes(i) ? r.key : '·'}</span>`).join('');
+  badge(); if (worldReady) { World.refreshMarkers(); refreshViews() }
+}
+
+/* ---------------- question engine ---------------- */
+const norm = s => String(s).replace(/\s+/g, '').toUpperCase();
+function renderPart(p) {
+  const w = el('div', 'part' + (p.en ? ' en' : '')); const q = el('p', 'q'); q.textContent = p.q; w.appendChild(q); let get;
+  if (p.t === 'choice' || p.t === 'multi') {
+    const box = el('div', 'opts'); const sel = new Set();
+    p.o.forEach((o, i) => {
+      const b = el('button', 'opt' + (p.ox ? ' ox' : '') + (p.en ? ' en' : '') + (p.pic ? ' pic' : ''));
+      if (p.pic) { b.innerHTML = `<img src="${IMGS[o.img]}" alt="${o.alt}"><span class="no">${i + 1}</span>`; b.setAttribute('aria-label', o.alt) } else b.textContent = o;
+      b.setAttribute('aria-pressed', 'false');
+      b.onclick = () => { if (p.t === 'choice') { sel.clear(); box.querySelectorAll('.opt').forEach(x => { x.classList.remove('sel'); x.setAttribute('aria-pressed', 'false') }) } if (sel.has(i)) sel.delete(i); else sel.add(i); b.classList.toggle('sel', sel.has(i)); b.setAttribute('aria-pressed', String(sel.has(i))); w.classList.remove('bad') };
+      box.appendChild(b)
+    });
+    w.appendChild(box);
+    get = () => p.t === 'choice' ? (sel.size ? [...sel][0] === p.a : null) : (sel.size ? (sel.size === p.a.length && p.a.every(i => sel.has(i))) : null);
+    w._fill = () => box.querySelectorAll('.opt').forEach((b, i) => { const on = p.t === 'choice' ? i === p.a : p.a.includes(i); if (on !== sel.has(i)) b.click() });
+  } else if (p.t === 'code') {
+    const inp = el('input', 'codein' + (p.short ? ' short' : '')); inp.placeholder = p.ph || ''; inp.id = 'in-' + Math.random().toString(36).slice(2, 8); inp.autocomplete = 'off'; inp.setAttribute('aria-label', p.q);
+    inp.oninput = () => w.classList.remove('bad'); inp.onkeydown = e => { if (e.key === 'Enter') { const s = $('#bSubmit'); s && s.click() } }; w.appendChild(inp);
+    get = () => inp.value.trim() ? p.a.map(norm).includes(norm(inp.value)) : null; w._fill = () => inp.value = p.a[0];
+  } else if (p.t === 'match') {
+    const box = el('div', 'mrows'); const vals = p.items.map(() => -1);
+    p.items.forEach((it, i) => {
+      const r = el('div', 'row'); const l = el('span', 'lbl'); l.textContent = it; r.appendChild(l);
+      if (p.btn || p.targets.length <= 2) { const sg = el('div', 'seg'); p.targets.forEach((t, j) => { const b = el('button'); b.textContent = t; b.onclick = () => { vals[i] = j; sg.querySelectorAll('button').forEach((x, k) => x.classList.toggle('sel', k === j)); w.classList.remove('bad') }; sg.appendChild(b) }); r.appendChild(sg) }
+      else { const s = el('select'); s.id = 'sel-' + Math.random().toString(36).slice(2, 8); s.setAttribute('aria-label', it); s.innerHTML = '<option value="-1">— 고르기 —</option>' + p.targets.map((t, j) => `<option value="${j}">${t}</option>`).join(''); s.onchange = () => { vals[i] = +s.value; w.classList.remove('bad') }; r.appendChild(s) }
+      box.appendChild(r)
+    });
+    w.appendChild(box);
+    get = () => vals.includes(-1) ? null : vals.every((v, i) => v === p.a[i]);
+    w._fill = () => box.querySelectorAll('.row').forEach((r, i) => { const s = r.querySelector('select'); if (s) { s.value = p.a[i]; s.onchange() } else r.querySelectorAll('.seg button')[p.a[i]].click() });
+  } else if (p.t === 'order') {
+    const seq = el('div', 'seq'), pool = el('div', 'opts'); const picked = [];
+    const tiles = p.items.map((it, i) => { const b = el('button', 'tile' + (p.letters ? ' letter' : '')); b.textContent = it; b.onclick = () => { if (b.classList.contains('used')) return; b.classList.add('used'); picked.push(i); const c = el('button', 'tile' + (p.letters ? ' letter' : '')); c.textContent = it; c.title = '빼기'; c.onclick = () => { picked.splice(picked.indexOf(i), 1); c.remove(); b.classList.remove('used') }; seq.appendChild(c); w.classList.remove('bad') }; pool.appendChild(b); return b });
+    const rs = el('button', 'btn'); rs.textContent = '다시 놓기'; rs.onclick = () => { picked.length = 0; seq.innerHTML = ''; tiles.forEach(t => t.classList.remove('used')) };
+    w.appendChild(seq); w.appendChild(pool); const rr = el('div'); rr.style.cssText = 'display:flex;justify-content:flex-end;margin-top:8px'; rr.appendChild(rs); w.appendChild(rr);
+    get = () => picked.length < p.items.length ? null : picked.map(i => p.items[i]).join('|') === p.a.join('|');
+    w._fill = () => { rs.onclick(); const used = new Set(); p.a.forEach(t => { const i = p.items.findIndex((x, k) => x === t && !used.has(k)); used.add(i); tiles[i].click() }) };
+  }
+  w._get = get; return w;
+}
+function openQ(id) {
+  const q = Q[id]; const wrap = el('div');
+  wrap.innerHTML = `<div class="sh-head"><span class="id">${id}</span><h2>${q.title}</h2><span class="chip">${q.cat}</span><button class="x" aria-label="닫기">✕</button></div>`;
+  const body = el('div', 'sh-body'); body.appendChild(el('div', 'paper' + (q.real ? ' real' : ''), `<div class="obj">수집 자료 · ${q.obj}</div>${q.doc}`));
+  const parts = el('div', 'parts'); const pe = q.parts.map(p => { const e = renderPart(p); parts.appendChild(e); return e }); body.appendChild(parts); wrap.appendChild(body);
+  const hb = el('div', 'hintbox'); hb.hidden = true; hb.innerHTML = `<b>힌트</b> · ${q.hint}`; wrap.appendChild(hb);
+  const foot = el('div', 'sh-foot'); foot.innerHTML = `<button class="btn" id="bHint">힌트 보기</button><p class="fb" id="fb" aria-live="polite">답을 모두 고른 뒤 제출하세요.</p>${TEACHER ? '<button class="btn" id="bFill">교사용: 정답 채우기</button>' : ''}<button class="btn" id="bReveal" hidden>정답 공개</button><button class="btn primary" id="bSubmit">제출</button>`; wrap.appendChild(foot);
+  let tries = 0, usedHint = false;
+  overlay(wrap, closeModal); wrap.querySelector('.x').onclick = closeModal;
+  $('#bHint').onclick = () => { hb.hidden = false; if (!usedHint) { usedHint = true; S.hints++; save() } };
+  if (TEACHER) $('#bFill').onclick = () => pe.forEach(e => e._fill());
+  $('#bReveal').onclick = () => { pe.forEach(e => e._fill()); success(true) };
+  $('#bSubmit').onclick = () => {
+    const r = pe.map(e => e._get()); const fb = $('#fb');
+    if (r.some(x => x === null)) { fb.className = 'fb err'; fb.textContent = '아직 답하지 않은 칸이 있어요.'; pe.forEach((e, i) => e.classList.toggle('bad', r[i] === null)); return }
+    if (r.every(Boolean)) { success(false); return }
+    tries++; S.wrong++; save(); pe.forEach((e, i) => { e.classList.toggle('bad', !r[i]); e.classList.toggle('good', !!r[i]) });
+    fb.className = 'fb err'; fb.textContent = `표시된 부분을 다시 생각해 보세요. (${tries}번째 시도)` + (tries >= 2 && !usedHint ? ' · 힌트를 열어 보세요.' : '');
+    if (tries >= 2) hb.hidden = false; if (tries >= 3) $('#bReveal').hidden = false;
+  };
+  function success(revealed) {
+    pe.forEach(e => { e.classList.remove('bad'); e.classList.add('good'); e.querySelectorAll('button,input,select').forEach(x => x.disabled = true) });
+    foot.remove(); hb.remove();
+    const res = el('div', 'result'); res.innerHTML = `<h3>${revealed ? '정답 공개' : '해결!'}</h3><p class="expl"><b>정답·해설</b> · ${q.expl}</p><div class="cluecard"><small>획득 단서 · ${id}${SCI.has(id) ? ' · 과학적 증거' : ''}</small>${q.clue}</div><div><button class="btn primary" id="bCont">단서를 챙긴다</button></div>`; wrap.appendChild(res);
+    if (!S.solved[id]) { S.solved[id] = revealed ? 'r' : 1; S.clues.push({ id, text: q.clue }); save() }
+    refreshHud(); res.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); $('#bCont').focus();
+    $('#bCont').onclick = () => { closeModal(); if (!nextId()) roomClear() };
+  }
+}
+function clickSpot(id) { if (S.solved[id]) { openSolved(id); return } if (id !== nextId()) { toast(`먼저 <b>${nextId()}</b> ${Q[nextId()].obj}부터 조사하자.` + (viewOf(nextId()) !== World.view() ? ` (‘${ROOMS[S.room].views[viewOf(nextId())].name}’)` : '')); return } openQ(id) }
+function openSolved(id) { const q = Q[id]; const w = el('div'); w.innerHTML = `<div class="sh-head"><span class="id">${id}</span><h2>${q.title}</h2><span class="chip">해결</span><button class="x" aria-label="닫기">✕</button></div><div class="sh-body"><div class="paper${q.real ? ' real' : ''}"><div class="obj">수집 자료 · ${q.obj}</div>${q.doc}</div><div class="parts"><p class="expl"><b>정답·해설</b> · ${q.expl}</p><div class="cluecard"><small>획득 단서 · ${id}</small>${q.clue}</div></div></div>`; overlay(w, closeModal); w.querySelector('.x').onclick = closeModal }
+function roomClear() {
+  const rm = ROOMS[S.room]; if (!S.cleared.includes(S.room)) { S.cleared.push(S.room); save() } refreshHud();
+  const w = el('div', 'clearbox'); w.innerHTML = `<div class="chip">SPACE ${S.room + 1} CLEAR</div><div class="big">${rm.key}</div><h2>열쇠 글자 ‘${rm.key}’ 획득</h2><p>${rm.clear}</p><p style="color:var(--muted)">얻은 것: ${rm.reward}</p><button class="btn primary" id="bGo">${S.room === 4 ? '금고 문으로' : '문으로 간다'}</button>`;
+  overlay(w, closeModal, true); $('#bGo').onclick = () => { closeModal(); goView(viewOf('door'), () => World.faceSpot('door')) };
+}
+function clickDoor() { if (nextId()) { toast(`문이 잠겨 있다. 아직 풀지 않은 단서가 ${roomIds().filter(i => !S.solved[i]).length}개 있다.`); return } if (S.room === 4) { keypad(); return } go(S.room + 1) }
+function fadeCard(i, cb) { const rm = ROOMS[i]; const f = $('#fade'); f.style.backgroundImage = `url(${IMGS[rm.img]})`; $('#fN').textContent = `SPACE ${i + 1} / 5`; $('#fT').textContent = rm.name; $('#fS').textContent = rm.sub; f.style.opacity = 1; World.setEnabled(false); setTimeout(cb, 800); setTimeout(() => { f.style.opacity = 0; setPlay(true) }, 2400) }
+function go(i) { fadeCard(i, () => { S.room = i; S.view = 0; save(); enterRoom() }) }
+function enterRoom() { const rm = ROOMS[S.room]; World.build(S.room, S.view || 0); $('#hEye').textContent = `SPACE ${S.room + 1} / 5`; $('#hName').textContent = rm.name; $('#hSub').textContent = rm.sub; refreshHud() }
+function keypad() {
+  const w = el('div', 'clearbox'); w.innerHTML = `<div class="chip">FINAL · 5-5 (3)</div><h2>다섯 공간의 열쇠 글자를 입력하라</h2><p style="color:var(--muted)">공간 1 → 5 순서로 얻은 글자</p><div class="keypad">${[0, 1, 2, 3, 4].map(i => `<input id="kp${i}" maxlength="1" aria-label="${i + 1}번째 글자" autocomplete="off">`).join('')}</div><p class="fb" id="kfb" aria-live="polite"></p><div style="display:flex;gap:8px"><button class="btn" id="kClose">닫기</button><button class="btn primary" id="kGo">열기</button></div>`;
+  overlay(w, closeModal, true); const ins = [...w.querySelectorAll('input')];
+  ins.forEach((x, i) => { x.oninput = () => { x.value = x.value.toUpperCase().replace(/[^A-Z]/g, ''); if (x.value && ins[i + 1]) ins[i + 1].focus() }; x.onkeydown = e => { if (e.key === 'Backspace' && !x.value && ins[i - 1]) ins[i - 1].focus(); if (e.key === 'Enter') $('#kGo').click() } });
+  ins[0].focus(); $('#kClose').onclick = closeModal;
+  $('#kGo').onclick = () => { const v = ins.map(x => x.value).join(''); if (v === 'TRUTH') { closeModal(); finish() } else { S.wrong++; save(); $('#kfb').className = 'fb err'; $('#kfb').textContent = '금고가 열리지 않는다. 화면 위쪽의 열쇠 글자를 순서대로 읽어 보자.' } };
+}
+function hideGame() { $('#hot').hidden = true; $('#hud').hidden = true; $('#prompt').hidden = true; $('#cross').hidden = true; World.setEnabled(false) }
+function finish() { S.done = true; save(); const f = $('#fade'); f.style.backgroundImage = 'none'; $('#fN').textContent = ''; $('#fT').textContent = 'TRUTH'; $('#fS').textContent = '금고 문이 열린다'; f.style.opacity = 1; setTimeout(() => { hideGame(); showEnd(); f.style.opacity = 0 }, 1600) }
+function showEnd() { ['#notice', '#sign', '#final'].forEach(s => $(s).hidden = true); $('#end').hidden = false; const m = Math.round((Date.now() - S.t0) / 60000); const rv = Object.values(S.solved).filter(v => v === 'r').length; $('#stats').innerHTML = `<span>걸린 시간 <b>${m}분</b></span><span>힌트 사용 <b>${S.hints}</b></span><span>다시 생각한 횟수 <b>${S.wrong}</b></span><span>정답 공개 <b>${rv}</b></span>` }
+
+/* ---------------- 단서 수첩 ---------------- */
+const WORDBANK = ['코·입', '기관', '폐', '폐포', '산소', '이산화탄소', '혈액', '심장', '세포', '에너지', '호흡', '순환', '기도가 막히면', '질식', '쇼크'];
+function openNotebook() {
+  const nb = S.nb; const w = el('div');
+  const clues = S.clues.slice().sort((a, b) => a.id.localeCompare(b.id));
+  w.innerHTML = `<div class="sh-head"><span class="id">수첩</span><h2>단서 수첩 · ${esc(S.cls)}반 ${esc(S.no)}번 ${esc(S.name)}</h2><span class="saved" id="nbSaved">자동 저장</span><button class="x" aria-label="닫기">✕</button></div>
+  <div class="nb">
+    <div class="nb-clues"><h3>모은 단서 ${clues.length} / 25</h3><p class="nb-empty" style="margin:0">초록 줄은 과학적 증거예요. ‘증거로 넣기’를 누르면 오른쪽 빈 증거 칸에 들어가요.</p>
+      ${clues.length ? clues.map(c => `<div class="nbc${SCI.has(c.id) ? ' sci' : ''}"><small>${c.id}${SCI.has(c.id) ? '<span class="tag">과학적 증거</span>' : ''}</small><span>${c.text}</span><button data-c="${c.id}">증거로 넣기</button></div>`).join('') : '<p class="nb-empty">아직 모은 단서가 없어요. 방을 조사해 단서를 모으세요.</p>'}
+    </div>
+    <div class="nb-form">
+      <div class="fld"><label for="nbSum">1. 사건 요약</label><span class="sub">언제, 어디서, 무슨 일이 있었고, 경찰은 어떻게 발표했나요?</span><textarea id="nbSum" placeholder="1987년 1월 14일, ...">${esc(nb.summary)}</textarea></div>
+      <div class="pair">
+        <div class="fld"><label for="nbClaim">2. 나의 주장: 사망 원인은?</label><select id="nbClaim"><option value="">— 고르기 —</option>${['질식 (호흡의 문제)', '쇼크 (순환의 문제)', '아직 판단할 수 없다'].map(o => `<option${nb.claim === o ? ' selected' : ''}>${o}</option>`).join('')}</select></div>
+        <div class="fld"><label for="nbConf">확신의 정도</label><select id="nbConf"><option value="">— 고르기 —</option>${['must (거의 확실하다)', 'may (그럴 수도 있다)', 'can’t (그럴 리가 없다)'].map(o => `<option${nb.conf === o ? ' selected' : ''}>${o}</option>`).join('')}</select></div>
+      </div>
+      <div class="fld"><span class="lb">3. 과학적 증거 (최소 3개)</span><span class="sub">왼쪽 단서를 넣거나 직접 쓰고, 그 증거가 몸에 무슨 일이 있었음을 보여 주는지 적으세요.</span>
+        ${nb.ev.map((e, i) => `<div class="evi"><span class="n">증거 ${i + 1}</span><input type="text" id="nbEv${i}" placeholder="증거 (예: 의사가 폐에서 물소리를 들었다)" value="${esc(e.t)}"><input type="text" id="nbEm${i}" placeholder="이 증거가 보여 주는 것 (예: 물이 공기의 길로 들어갔다)" value="${esc(e.m)}"></div>`).join('')}
+      </div>
+      <div class="fld"><label for="nbSci">4. 과학 원리로 설명하기</label><span class="sub">산소가 세포까지 가는 길(호흡·순환)을 써서, 증거가 왜 그 사망 원인을 가리키는지 설명하세요.</span><div class="bank" id="nbBank">${WORDBANK.map(b => `<button type="button">${b}</button>`).join('')}</div><textarea id="nbSci" placeholder="기도가 막히면 산소가 폐로 들어가지 못하고, ...">${esc(nb.sci)}</textarea></div>
+      <div class="fld"><label for="nbHide">5. 진실을 숨기려 한 흔적</label><textarea id="nbHide" placeholder="요약본, 보도 지시 쪽지, ...">${esc(nb.hide)}</textarea></div>
+      <div class="fld"><label for="nbEn">6. 영어 한 문장 (선택)</label><input type="text" id="nbEn" placeholder="It was not shock. It was asphyxia." value="${esc(nb.en)}"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="nbPng">수첩·서명 이미지로 저장</button><button class="btn" id="nbClose">닫기</button></div>
+      <p class="fb" id="nbMsg" aria-live="polite"></p>
+    </div>
+  </div>`;
+  overlay(w, () => { readNb(); closeModal() });
+  let lastFocus = null;
+  const readNb = () => { nb.summary = $('#nbSum').value; nb.claim = $('#nbClaim').value; nb.conf = $('#nbConf').value; nb.ev = [0, 1, 2].map(i => ({ t: $('#nbEv' + i).value, m: $('#nbEm' + i).value })); nb.sci = $('#nbSci').value; nb.hide = $('#nbHide').value; nb.en = $('#nbEn').value };
+  let st; const autosave = () => { clearTimeout(st); $('#nbSaved').textContent = '저장 중…'; st = setTimeout(() => { readNb(); save(); $('#nbSaved').textContent = '저장됨' }, 600) };
+  w.querySelectorAll('textarea,input,select').forEach(x => { x.addEventListener('input', autosave); x.addEventListener('focus', () => lastFocus = x) });
+  w.querySelectorAll('.nbc button').forEach(b => b.onclick = () => { const c = S.clues.find(c => c.id === b.dataset.c); const i = [0, 1, 2].find(i => !$('#nbEv' + i).value.trim()); if (i === undefined) { $('#nbMsg').textContent = '증거 칸 세 개가 모두 찼어요. 바꾸려면 칸의 내용을 지운 뒤 다시 넣으세요.'; return } $('#nbEv' + i).value = `[${c.id}] ${c.text}`; autosave(); $('#nbEm' + i).focus() });
+  $('#nbBank').querySelectorAll('button').forEach(b => b.onclick = () => { const t = lastFocus && lastFocus.tagName === 'TEXTAREA' ? lastFocus : $('#nbSci'); const pos = t.selectionStart ?? t.value.length; t.value = t.value.slice(0, pos) + b.textContent + t.value.slice(pos); t.focus(); t.selectionStart = t.selectionEnd = pos + b.textContent.length; autosave() });
+  const close = () => { readNb(); save(); closeModal() };
+  w.querySelector('.x').onclick = close; $('#nbClose').onclick = close;
+  $('#nbPng').onclick = async () => { readNb(); save(); await saveNotebookPng(S, $('#nbMsg')) };
+}
+async function drawNotebook(st) {
+  try { await Promise.all(['16px "Noto Sans KR"', '700 16px "Noto Sans KR"', '800 20px "Nanum Myeongjo"', '16px "IBM Plex Mono"'].map(f => document.fonts.load(f))) } catch (e) { }
+  const nb = st.nb || emptyNb(); const Wd = 1240, pad = 80, cw = Wd - pad * 2;
+  const c = document.createElement('canvas'); const x = c.getContext('2d');
+  const SANS = '"Noto Sans KR","Malgun Gothic",sans-serif', SERIF = '"Nanum Myeongjo","Batang",serif', MONO = '"IBM Plex Mono",monospace';
+  const lines = (text, font, width) => { x.font = font; const out = []; String(text || '').split('\n').forEach(par => { let cur = ''; for (const ch of par) { if (x.measureText(cur + ch).width > width && cur) { out.push(cur); cur = ch } else cur += ch } out.push(cur) }); return out };
+  const ops = []; let y = 0;
+  const text = (t, font, color, lh, indent = 0, width = cw) => { const ls = lines(t, font, width - indent); ls.forEach(l => { ops.push(['t', l, font, color, pad + indent, y + lh * .8]); y += lh }) };
+  const gap = h => y += h;
+  const rule = (col = '#b9a77f') => { ops.push(['r', y, col]); y += 2 };
+  const empty = v => !String(v || '').trim();
+  y = 70;
+  text('게임 속 가상 자료 · 1987 평행세계 RPG', `600 18px ${MONO}`, '#b5402f', 28);
+  text('단서 수첩', `800 54px ${SERIF}`, '#2b1d0e', 70);
+  text(`${st.cls ? st.cls + '반 ' : ''}${st.no}번 ${st.name}   ·   ${new Date().toLocaleDateString('ko-KR')}   ·   모은 단서 ${st.clues ? st.clues.length : (st.solved ? st.solved.length : 0)} / 25`, `500 20px ${SANS}`, '#6c6455', 32);
+  gap(12); rule('#2b1d0e'); gap(22);
+  const sec = (n, title, body, hl) => { text(`${n}. ${title}`, `800 26px ${SERIF}`, hl ? '#1f5e43' : '#2b1d0e', 40); gap(4); text(empty(body) ? '(아직 쓰지 않음)' : body, `400 21px ${SANS}`, empty(body) ? '#9a8f78' : '#2b1d0e', 34, 18); gap(22) };
+  sec(1, '사건 요약', nb.summary);
+  text('2. 나의 주장', `800 26px ${SERIF}`, '#2b1d0e', 40); gap(4);
+  text(`사망 원인: ${nb.claim || '(고르지 않음)'}      확신의 정도: ${nb.conf || '(고르지 않음)'}`, `700 22px ${SANS}`, '#2b1d0e', 34, 18); gap(22);
+  const evTop = y; text('3. 과학적 증거', `800 26px ${SERIF}`, '#1f5e43', 40); gap(6);
+  nb.ev.forEach((e, i) => { const t0 = y; text(`증거 ${i + 1}  ${empty(e.t) ? '(비어 있음)' : e.t}`, `700 21px ${SANS}`, empty(e.t) ? '#9a8f78' : '#2b1d0e', 33, 26); text(`→ ${empty(e.m) ? '(이 증거가 보여 주는 것을 아직 쓰지 않음)' : e.m}`, `400 20px ${SANS}`, empty(e.m) ? '#9a8f78' : '#1f5e43', 32, 26); ops.push(['bar', t0, y, '#2f7a5a']); gap(12) });
+  gap(10);
+  sec(4, '과학 원리로 설명하기 (호흡·순환)', nb.sci, true);
+  sec(5, '진실을 숨기려 한 흔적', nb.hide);
+  if (!empty(nb.en)) { text('6. 영어 한 문장', `800 26px ${SERIF}`, '#2b1d0e', 40); gap(4); text(nb.en, `500 22px ${MONO}`, '#2b1d0e', 34, 18); gap(22) }
+  rule(); gap(16);
+  text('모은 단서', `800 22px ${SERIF}`, '#2b1d0e', 34);
+  (st.clues || []).slice().sort((a, b) => a.id.localeCompare(b.id)).forEach(cl => text(`${cl.id}${SCI.has(cl.id) ? ' [과학]' : ''}  ${cl.text}`, `400 16px ${SANS}`, SCI.has(cl.id) ? '#1f5e43' : '#4a4436', 25, 10));
+  // 서명
+  gap(26); rule('#7a5a2e'); gap(26);
+  const sigTop = y;
+  text('평행세계의 가려진 진실을 알리는 데에 동참하시겠습니까?', `800 28px ${SERIF}`, '#3a2410', 44);
+  gap(8);
+  text(`${st.signed ? '☑' : '☐'}  네, 가려진 진실을 세상에 알리는 데 동참합니다.`, `700 22px ${SANS}`, st.signed ? '#3a2410' : '#9a8463', 36, 6);
+  gap(14);
+  const sigLineY = y + 58; ops.push(['sig', st.signed ? st.signName : '', sigLineY, st.signedAt]); y = sigLineY + 70;
+  gap(20); text('made by. 나수진쌤 & 전소현쌤', `500 15px ${MONO}`, '#8a7350', 24);
+  const Hh = y + 60; c.width = Wd; c.height = Hh;
+  parchment(x, Wd, Hh);
+  x.save(); x.translate(Wd - 230, 60); x.rotate(.08); x.strokeStyle = '#b5402f'; x.lineWidth = 3; x.strokeRect(0, 0, 170, 54); x.fillStyle = '#b5402f'; x.font = `800 22px ${SERIF}`; x.textAlign = 'center'; x.fillText('수사 기록', 85, 36); x.restore();
+  ops.forEach(o => { if (o[0] === 'sig') { const [, nm, ly, at] = o; x.fillStyle = '#5b4426'; x.font = `500 18px ${SANS}`; x.textAlign = 'left'; x.fillText('서명', pad + 6, ly - 6); x.strokeStyle = '#5b4426'; x.lineWidth = 2; x.beginPath(); x.moveTo(pad + 60, ly); x.lineTo(pad + 560, ly); x.stroke(); if (nm) { x.save(); x.translate(pad + 90, ly - 10); x.rotate(-.04); x.fillStyle = '#1d2f5c'; x.font = `800 46px ${SERIF}`; x.fillText(nm, 0, 0); x.restore(); x.fillStyle = '#5b4426'; x.font = `500 17px ${SANS}`; x.fillText(new Date(at).toLocaleString('ko-KR'), pad + 600, ly - 6); x.save(); x.translate(Wd - pad - 80, ly - 30); x.rotate(-.2); x.strokeStyle = 'rgba(160,30,20,.8)'; x.lineWidth = 4; x.beginPath(); x.arc(0, 0, 62, 0, Math.PI * 2); x.stroke(); x.beginPath(); x.arc(0, 0, 53, 0, Math.PI * 2); x.lineWidth = 1.5; x.stroke(); x.fillStyle = 'rgba(160,30,20,.85)'; x.font = `800 21px ${SERIF}`; x.textAlign = 'center'; x.fillText('진실 알림', 0, -6); x.fillText('동참', 0, 22); x.restore() } else { x.fillStyle = '#9a8463'; x.font = `500 20px ${SANS}`; x.fillText('(아직 서명하지 않음)', pad + 90, ly - 12) } return } if (o[0] === 't') { x.font = o[2]; x.fillStyle = o[3]; x.textAlign = 'left'; x.fillText(o[1], o[4], o[5]) } else if (o[0] === 'r') { x.fillStyle = o[2]; x.fillRect(pad, o[1], cw, 2) } else if (o[0] === 'bar') { x.fillStyle = o[3]; x.fillRect(pad + 8, o[1] + 4, 5, o[2] - o[1] - 8) } });
+  return c;
+}
+function parchment(x, w, h) {
+  const g = x.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .2, w / 2, h / 2, Math.max(w, h) * .75);
+  g.addColorStop(0, '#f1e0b5'); g.addColorStop(.6, '#e6cf98'); g.addColorStop(1, '#c9a76a'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+  for (let i = 0; i < 90; i++) { const cx = Math.random() * w, cy = Math.random() * h, r = 30 + Math.random() * 160; const s = x.createRadialGradient(cx, cy, 0, cx, cy, r); s.addColorStop(0, `rgba(${Math.random() < .5 ? '140,95,40' : '255,245,215'},${Math.random() * .09})`); s.addColorStop(1, 'rgba(140,95,40,0)'); x.fillStyle = s; x.fillRect(cx - r, cy - r, r * 2, r * 2) }
+  for (let i = 0; i < 14000; i++) { x.fillStyle = `rgba(90,60,25,${Math.random() * .07})`; x.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5) }
+  x.strokeStyle = 'rgba(110,75,35,.07)'; x.lineWidth = 1; for (let i = 0; i < 260; i++) { const sx = Math.random() * w, sy = Math.random() * h, l = 20 + Math.random() * 80, an = Math.random() * Math.PI; x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx + Math.cos(an) * l, sy + Math.sin(an) * l); x.stroke() }
+  const e = 70; [['l', 0, 0, e, 0], ['r', w, 0, w - e, 0], ['t', 0, 0, 0, e], ['b', 0, h, 0, h - e]].forEach(([k, x0, y0, x1, y1]) => { const lg = x.createLinearGradient(x0, y0, x1, y1); lg.addColorStop(0, 'rgba(95,55,20,.45)'); lg.addColorStop(1, 'rgba(95,55,20,0)'); x.fillStyle = lg; x.fillRect(0, 0, w, h) });
+  x.strokeStyle = 'rgba(110,70,30,.35)'; x.lineWidth = 2; x.strokeRect(28, 28, w - 56, h - 56);
+}
+async function saveNotebookPng(st, msgEl) {
+  const c = await drawNotebook(st);
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  const name = `단서수첩_서명_${st.cls}반_${st.no}번_${st.name}.png`;
+  let dl = null; try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null } catch (e) { }
+  if (dl) { try { await dl.save({ filename: name, data: blob }); if (msgEl) msgEl.textContent = '이미지를 저장했어요.'; return } catch (e) { if (e && e.code === 'declined') { if (msgEl) msgEl.textContent = '저장을 취소했어요.'; return } } }
+  if (!(window.claude && window.claude.use)) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); if (msgEl) msgEl.textContent = '이미지를 저장했어요. (다운로드 폴더를 확인하세요)'; return }
+  // fallback: show the image so it can be saved by long-press / right-click
+  const url = URL.createObjectURL(blob); const w = el('div'); w.innerHTML = `<div class="sh-head"><h2>단서 수첩 이미지</h2><button class="x" aria-label="닫기">✕</button></div><div style="padding:16px 20px"><p class="tnote" style="margin:0 0 10px">이미지를 마우스 오른쪽 버튼(휴대폰은 길게 누르기)으로 눌러 저장하세요.</p><img class="imgprev" src="${url}" alt="단서 수첩 이미지"></div>`;
+  overlay(w, closeModal); w.querySelector('.x').onclick = closeModal;
+}
+
+/* ---------------- 단어장 / 메뉴 ---------------- */
+function drawer(html) { const d = el('div', 'drawer', html); d.setAttribute('role', 'dialog'); const r = $('#drawerRoot'); r.innerHTML = ''; r.appendChild(d); World.setEnabled(false); d.querySelector('.x').onclick = closeDrawer; d.querySelector('.x').focus() }
+$('#bWords').onclick = () => drawer(`<div class="dh"><h2>영어 단어 리스트</h2><button class="x" aria-label="닫기">✕</button></div>
+ <h3>A. 게임 문제에 나오는 단어</h3><table class="wl">${WORDS.map(w => `<tr><td>${w[0]}</td><td>${w[1]}</td></tr>`).join('')}</table>
+ <h3>B. 카드뉴스에 쓸 표현</h3>
+ <div class="cn"><b>주장 전하기</b><ul><li>The police said that ~.</li><li>The police claimed that ~.</li><li>According to the police, ~.</li></ul></div><div class="cn"><b>증거 보여 주기</b><ul><li>The autopsy shows ~.</li><li>There was water on the floor.</li><li>The doctor heard water in the lungs.</li><li>There were bruises on the neck and chest.</li><li>The findings suggest a breathing problem.</li></ul></div><div class="cn"><b>반박하기</b><ul><li>But ~.</li><li>However, ~.</li><li>The record does not confirm the police explanation.</li><li>It was not shock. It was asphyxia.</li></ul></div><div class="cn"><b>과학 원리</b><ul><li>When the airway is blocked, oxygen cannot reach the lungs.</li><li>Without oxygen, cells cannot make energy.</li></ul></div><div class="cn"><b>마무리</b><ul><li>The truth cannot be hidden.</li><li>Tell the world the truth.</li></ul></div>
+ <h3>C. 확신의 정도 사다리</h3><div class="ladder"><div><b>must</b><span>거의 확실하다 · It must be true. 사실임이 틀림없다.</span></div><div><b>may / might</b><span>그럴 수도 있다 · It may be true. 사실일지도 모른다.</span></div><div><b>can’t</b><span>그럴 리가 없다 · It can’t be true. 사실일 리가 없다.</span></div></div>
+ <p class="exp" style="margin-top:10px">증거가 많을수록 must나 can’t처럼 강하게 말할 수 있고, 증거가 부족하면 may로 조심스럽게 말해요.</p>`);
+$('#bClues').onclick = openNotebook; $('#bNotes').onclick = openNotebook; $('#bNotes2').onclick = openNotebook; $('#bSaveAll').onclick = () => saveNotebookPng(S, $('#finalMsg'));
+$('#bMenu').onclick = () => {
+  const w = el('div', 'clearbox'); w.innerHTML = `<h2>메뉴</h2><p style="color:var(--muted)">${esc(S.cls)}반 ${esc(S.no)}번 ${esc(S.name)} · 진행 상황은 자동 저장돼요.</p><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="btn" id="mSpawn">방 전체 보기로</button><button class="btn" id="mOut">첫 화면으로 (저장됨)</button><button class="btn primary" id="mClose">계속하기</button></div>`;
+  overlay(w, closeModal, true); $('#mClose').onclick = closeModal;
+  $('#mSpawn').onclick = () => { closeModal(); goView(0) };
+  $('#mOut').onclick = () => { closeModal(); hideGame(); showNotice() };
+};
+
+/* ---------------- flow ---------------- */
+$('#introBg').style.backgroundImage = `url(${IMGS.R0})`;
+function showNotice() {
+  ['#intro', '#end', '#sign', '#final', '#teacher'].forEach(s => $(s).hidden = true); $('#notice').hidden = false;
+  let last = ''; try { last = localStorage.getItem(LS + 'last') || '' } catch (e) { }
+  const prev = last && load(last);
+  if (prev && !$('#sNo').value) { $('#sCls').value = prev.cls || ''; $('#sNo').value = prev.no; $('#sName').value = prev.name }
+  updateResume();
+}
+function updateResume() { const no = normNum($('#sNo').value), cls = normNum($('#sCls').value); const prev = no && cls && load(skey(cls, no)); const b = $('#bResume'); if (prev && (Object.keys(prev.solved).length || prev.room > 0 || prev.done)) { b.hidden = false; b.textContent = prev.signed ? '서명 완료 화면 보기' : prev.done ? '엔딩으로 가기' : `이어서 하기 · 공간 ${prev.room + 1}`; $('#bStart').textContent = '처음부터 새로 하기' } else { b.hidden = true; $('#bStart').textContent = '세계로 들어가기' } }
+$('#sNo').addEventListener('input', updateResume); $('#sCls').addEventListener('input', updateResume);
+function normNum(v) { const m = String(v || '').match(/\d+/); return m ? String(parseInt(m[0], 10)) : '' }
+const normCls = normNum;
+function readLogin() { const cls = normNum($('#sCls').value), no = normNum($('#sNo').value), name = $('#sName').value.trim(); if (!cls || +cls < 1 || +cls > 30) { $('#loginErr').textContent = '반을 숫자로 입력하세요. (예: 2)'; $('#sCls').focus(); return null } if (!no || +no < 1 || +no > 60) { $('#loginErr').textContent = '번호를 숫자로 입력하세요. (예: 7)'; $('#sNo').focus(); return null } if (!name) { $('#loginErr').textContent = '이름을 입력하세요.'; $('#sName').focus(); return null } $('#loginErr').textContent = ''; return { cls, no, name } }
+$('#loginForm').addEventListener('submit', e => { e.preventDefault(); const L = readLogin(); if (!L) return; S = fresh(L.cls, L.no, L.name); save(); startIntro() });
+$('#bResume').onclick = () => { const L = readLogin(); if (!L) return; S = load(skey(L.cls, L.no)); S.name = L.name; S.nb = S.nb || emptyNb(); save(); if (S.signed) { $('#notice').hidden = true; showFinal() } else if (S.done) { $('#notice').hidden = true; showEnd() } else play() };
+function startIntro() { $('#notice').hidden = true; const it = $('#intro'); it.hidden = false; const ls = [...it.querySelectorAll('.line')]; ls.forEach(l => l.classList.remove('on')); const rm = matchMedia('(prefers-reduced-motion: reduce)').matches; ls.forEach((l, i) => setTimeout(() => l.classList.add('on'), rm ? 0 : 400 + i * 1000)) }
+async function play() {
+  await ready; while (!worldReady) await new Promise(r => setTimeout(r, 50));
+  ['#intro', '#notice'].forEach(s => $(s).hidden = true); $('#hud').hidden = false; $('#hot').hidden = false; $('#cross').hidden = false;
+  if (matchMedia('(pointer: coarse)').matches) $('#pad').hidden = false;
+  enterRoom(); setPlay(true);
+  if (!S.seenTip) { S.seenTip = 1; save(); setTimeout(() => toast('화살표 표시나 아래 위치 버튼을 눌러 방 안을 옮겨 다니세요. 빛나는 번호를 누르면 조사할 수 있어요.'), 600) }
+}
+$('#bEnter').onclick = () => { fadeCard(0, () => play()) };
+// mobile pad
+document.querySelectorAll('#pad button').forEach(b => { const k = b.dataset.k; const on = e => { e.preventDefault(); World.setVirtual(k, true) }, off = () => World.setVirtual(k, false); b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off) });
+// end → sign → final
+$('#bToSign').onclick = () => { $('#end').hidden = true; $('#sign').hidden = false; $('#sigName').value = ''; $('#sigChk').checked = false; $('#sigErr').textContent = ''; $('#sigName').focus() };
+$('#bSignBack').onclick = () => { $('#sign').hidden = true; showEnd() };
+$('#bSign').onclick = () => { const n = $('#sigName').value.trim(); if (!n) { $('#sigErr').textContent = '이름을 직접 써서 서명하세요.'; $('#sigName').focus(); return } if (!$('#sigChk').checked) { $('#sigErr').textContent = '동참한다면 체크 상자에 표시하세요.'; return } S.signed = true; S.signName = n; S.signedAt = Date.now(); save(); $('#sign').hidden = true; showFinal() };
+function showFinal() { ['#notice', '#end', '#sign'].forEach(s => $(s).hidden = true); $('#final').hidden = false; $('#certName').textContent = S.signName; $('#certMeta').textContent = `${S.cls}반 ${S.no}번 · ${new Date(S.signedAt).toLocaleString('ko-KR')}` }
+$('#bHome').onclick = () => { $('#final').hidden = true; showNotice() };
+
+/* ---------------- teacher ---------------- */
+$('#bTeacher').onclick = () => {
+  const w = el('div', 'clearbox'); w.innerHTML = `<h2>교사용 페이지</h2><p style="color:var(--muted)">비밀번호를 입력하세요.</p><input id="tPw" type="password" inputmode="numeric" maxlength="8" class="codein" autocomplete="off" aria-label="비밀번호"><p class="fb" id="tPwErr" aria-live="polite"></p><div style="display:flex;gap:8px"><button class="btn" id="tPwX">취소</button><button class="btn primary" id="tPwGo">들어가기</button></div>`;
+  overlay(w, closeModal, true); const i = $('#tPw'); i.focus(); i.onkeydown = e => { if (e.key === 'Enter') $('#tPwGo').click() }; $('#tPwX').onclick = closeModal;
+  $('#tPwGo').onclick = async () => { await Sync.init(); let ok; if (Sync.mode === 'api') { try { const r = await fetch('api/progress', { headers: { 'x-teacher-pw': i.value } }); ok = r.ok } catch (e) { ok = false } } else ok = i.value === TEACHER_PW; if (ok) { tPw = i.value; closeModal(); openTeacher() } else { $('#tPwErr').className = 'fb err'; $('#tPwErr').textContent = '비밀번호가 맞지 않아요.'; i.select() } };
+};
+let tTimer = 0, tUnsub = null, tAll = [], tPw = '';
+function openTeacher() { $('#notice').hidden = true; $('#teacher').hidden = false; $('#tDemo').checked = TEACHER; startDash(); clearInterval(tTimer); tTimer = setInterval(() => renderDash(tAll), 15000) }
+$('#tClose').onclick = () => { clearInterval(tTimer); if (tUnsub) { try { tUnsub() } catch (e) { } tUnsub = null } $('#teacher').hidden = true; showNotice() };
+$('#tRefresh').onclick = () => { if (tUnsub) { try { tUnsub() } catch (e) { } tUnsub = null } startDash() };
+$('#tDemo').onchange = e => { TEACHER = e.target.checked };
+$('#tSort').onchange = () => renderDash(tAll);
+$('#tCsv').onclick = () => { const rows = tTab === '전체' ? tAll : tAll.filter(r => r.cls === tTab); const head = ['반', '번호', '이름', '현재 공간', '해결 문항', '정답 공개', '힌트', '다시 생각', '탈출', '서명', '사망 원인 주장', '과학 원리 설명', '마지막 활동']; const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"'; const lines = [head.map(q).join(',')].concat(rows.map(r => [r.cls, r.no, r.name, r.done ? '완료' : (r.room + 1), (r.solved || []).length + (r.revealed || []).length, (r.revealed || []).length, r.hints, r.wrong, r.done ? 'O' : '', r.signed ? r.signName : '', r.nb && r.nb.claim, r.nb && r.nb.sci, new Date(r.updated).toLocaleString('ko-KR')].map(q).join(','))); const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv' }); saveFile(`1987_진행현황_${tTab}.csv`, blob) };
+async function saveFile(name, blob) { let dl = null; try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null } catch (e) { } if (dl) { try { await dl.save({ filename: name, data: blob }) } catch (e) { } return } const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1000) }
+$('#tDel').onclick = () => { if (tTab === '전체') { $('#tMsg').textContent = '지울 반의 탭을 먼저 고르세요.'; return } const w = el('div', 'clearbox'); w.innerHTML = `<h2>${esc(tTab)}반 기록 지우기</h2><p>${esc(tTab)}반 학생 ${tAll.filter(r => r.cls === tTab).length}명의 기록을 서버에서 지울까요? 되돌릴 수 없어요.</p><div style="display:flex;gap:8px"><button class="btn" id="dNo">취소</button><button class="btn primary" id="dYes">지우기</button></div>`; overlay(w, closeModal, true); $('#dNo').onclick = closeModal; $('#dYes').onclick = async () => { await fetch('api/progress?cls=' + encodeURIComponent(tTab), { method: 'DELETE', headers: { 'x-teacher-pw': tPw } }); closeModal(); $('#teacher').hidden = false } };
+function rowsFrom(docs) {
+  const best = {};
+  docs.forEach(d => { const v = d.data() || {}; Object.keys(v).forEach(k => { if (!k.startsWith('r_')) return; const r = v[k]; if (!r || !r.no) return; r.cls = normNum(r.cls) || '?'; r.no = normNum(r.no) || r.no; const key = r.cls + '_' + r.no; if (!best[key] || (r.updated || 0) > (best[key].updated || 0)) best[key] = r }) });
+  return Object.values(best);
+}
+function localRows() { const rows = []; try { Object.keys(localStorage).filter(k => k.startsWith(LS) && k !== LS + 'last').forEach(k => { const s = JSON.parse(localStorage.getItem(k)); if (s && s.solved) { const r = summary(s, s.lastAt || s.t0); r.cls = normNum(r.cls) || '?'; r.no = normNum(r.no); rows.push(r) } }) } catch (e) { } return rows }
+async function startDash() {
+  const msg = $('#tMsg'); $('#tUpdated').textContent = '연결 중…';
+  await Sync.init(); const db = Sync.db;
+  $('#tDel').hidden = Sync.mode !== 'api';
+  if (Sync.mode === 'api') {
+    const tick = async () => { try { const r = await fetch('api/progress', { headers: { 'x-teacher-pw': tPw }, cache: 'no-store' }); if (!r.ok) throw 0; const rows = await r.json(); rows.forEach(x => { x.cls = normNum(x.cls) || '?'; x.no = normNum(x.no) || x.no }); tAll = rows; msg.textContent = rows.length ? '' : '아직 전송된 학생 기록이 없어요. 학생이 게임을 시작하면 여기에 바로 나타나요.'; renderDash(tAll); $('#tUpdated').innerHTML = '<span class="sync on">● 실시간</span> ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) } catch (e) { $('#tUpdated').textContent = '연결 끊김 · 다시 시도 중' } };
+    tick(); const iv = setInterval(tick, 4000); tUnsub = () => clearInterval(iv); return;
+  }
+  if (!db) { msg.textContent = '실시간 기록에 연결할 수 없어요. claude.ai에 로그인한 상태에서 이 페이지를 열어야 해요. 아래에는 이 기기에 저장된 기록만 보여요.'; tAll = localRows(); renderDash(tAll); $('#tUpdated').textContent = '이 기기 기록'; return }
+  try {
+    tUnsub = db.collection('progress').onSnapshot(snap => {
+      tAll = rowsFrom(snap.docs); msg.textContent = tAll.length ? '' : '아직 전송된 학생 기록이 없어요. 학생은 이 페이지에 ‘참여자(Contributor)’ 권한으로 공유받고, claude.ai에 로그인한 상태여야 기록이 전송돼요.';
+      renderDash(tAll); $('#tUpdated').innerHTML = '<span class="sync on">● 실시간</span> ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }, e => { msg.textContent = '기록을 읽지 못했어요(' + (e && e.code || '오류') + '). 페이지 소유자 또는 편집자 계정으로 열어야 모든 학생 기록이 보여요.'; $('#tUpdated').textContent = '연결 끊김' });
+  } catch (e) { msg.textContent = '기록을 읽지 못했어요.' }
+}
+function fmtMin(ms) { const m = Math.max(0, Math.round(ms / 60000)); return m < 60 ? m + '분' : Math.floor(m / 60) + '시간 ' + (m % 60) + '분' }
+function ago(t) { const s = Math.round((Date.now() - t) / 1000); if (s < 60) return '방금'; if (s < 3600) return Math.round(s / 60) + '분 전'; return Math.round(s / 3600) + '시간 전' }
+function nbFilled(nb) { if (!nb) return 0; let n = 0; if ((nb.summary || '').trim()) n++; if (nb.claim) n++; (nb.ev || []).forEach(e => { if ((e.t || '').trim() && (e.m || '').trim()) n++ }); if ((nb.sci || '').trim()) n++; if ((nb.hide || '').trim()) n++; return n }
+let tTab = '전체';
+function renderDash(all) {
+  const classes = [...new Set(all.map(r => r.cls || '?'))].sort((a, b) => (+a || 999) - (+b || 999));
+  if (tTab !== '전체' && !classes.includes(tTab)) tTab = '전체';
+  $('#tTabs').innerHTML = ['전체', ...classes].map(c => `<button role="tab" aria-selected="${c === tTab}" data-c="${esc(c)}">${c === '전체' ? c : esc(c) + '반'}<b>${c === '전체' ? all.length : all.filter(r => r.cls === c).length}</b></button>`).join('');
+  $('#tTabs').querySelectorAll('button').forEach(b => b.onclick = () => { tTab = b.dataset.c; renderDash(all) });
+  const rows = tTab === '전체' ? all.slice() : all.filter(r => r.cls === tTab);
+  const prog = r => (r.solved || []).length + (r.revealed || []).length + (r.done ? 1 : 0) + (r.signed ? 1 : 0);
+  const byNo = (a, b) => ((+a.cls || 999) - (+b.cls || 999)) || ((+a.no || 999) - (+b.no || 999));
+  rows.sort($('#tSort').value === 'prog' ? (a, b) => (prog(b) - prog(a)) || byNo(a, b) : byNo);
+  const n = rows.length, done = rows.filter(r => r.done).length, signed = rows.filter(r => r.signed).length;
+  const avg = n ? Math.round(rows.reduce((s, r) => s + (r.solved || []).length + (r.revealed || []).length, 0) / n) : 0;
+  const idle = rows.filter(r => !r.done && Date.now() - r.updated > 5 * 60000).length;
+  $('#tSum').innerHTML = `<div><b>${n}</b><span>참여 학생</span></div><div><b>${avg}/25</b><span>평균 진행 문항</span></div><div><b>${done}</b><span>탈출 완료</span></div><div><b>${signed}</b><span>서명 완료</span></div><div><b>${idle}</b><span>5분 넘게 멈춤</span></div>`;
+  $('#tBody').innerHTML = rows.length ? rows.map((r, i) => {
+    const sv = new Set(r.solved || []), rv = new Set(r.revealed || []);
+    const cells = ORDER.map((id, k) => `<i class="${sv.has(id) ? 's' : rv.has(id) ? 'r' : ''}${k % 5 === 0 && k ? ' gap' : ''}" title="${id} ${Q[id].title}"></i>`).join('');
+    const where = r.signed ? '<span class="pill done">서명 완료</span>' : r.done ? '<span class="pill done">탈출 완료</span>' : `공간 ${r.room + 1} · ${ROOMS[r.room].name}`;
+    const stale = !r.done && Date.now() - r.updated > 5 * 60000;
+    const nf = nbFilled(r.nb);
+    return `<tr><td>${esc(r.cls || '')}반</td><td>${esc(r.no)}번</td><td>${esc(r.name)}</td><td>${where}</td><td><div class="cells">${cells}</div></td><td>${sv.size + rv.size}</td><td>${r.hints || 0}</td><td>${r.wrong || 0}</td><td>${rv.size}</td><td>${fmtMin((r.done ? r.updated : Date.now()) - r.t0)}</td><td>${nf}/8 ${nf ? `<button class="btn" style="padding:3px 10px;font-size:12px" data-nb="${i}">보기</button>` : ''}</td><td>${r.signed ? '✓ ' + esc(r.signName) : '—'}</td><td>${stale ? `<span class="pill idle">${ago(r.updated)}</span>` : ago(r.updated)}</td></tr>`
+  }).join('') : `<tr><td colspan="13" style="color:var(--muted);padding:20px">표시할 학생 기록이 없어요.</td></tr>`;
+  $('#tBody').querySelectorAll('[data-nb]').forEach(b => b.onclick = async () => {
+    const r = rows[+b.dataset.nb]; const st = { cls: r.cls, no: r.no, name: r.name, nb: r.nb, signed: r.signed, signName: r.signName, signedAt: r.signedAt, clues: [...(r.solved || []), ...(r.revealed || [])].map(id => ({ id, text: Q[id].clue })) };
+    const c = await drawNotebook(st); const url = c.toDataURL('image/png');
+    const w = el('div'); w.innerHTML = `<div class="sh-head"><h2>${esc(r.cls || '')}반 ${esc(r.no)}번 ${esc(r.name)} · 단서 수첩</h2><button class="x" aria-label="닫기">✕</button></div><div style="padding:16px 20px;display:grid;gap:10px"><div><button class="btn primary" id="tSave">이미지로 저장</button></div><img class="imgprev" src="${url}" alt="단서 수첩"></div>`;
+    overlay(w, closeModal); w.querySelector('.x').onclick = closeModal; $('#tSave').onclick = () => saveNotebookPng(st, null);
+  });
+}
+
+/* ---------------- boot ---------------- */
+showNotice();
+Sync.init();
+window.__game = { S: () => S, Q, World, door: clickDoor, go: i => { S.room = i; enterRoom() }, open: openQ, notebook: openNotebook, finish, drawNotebook };
+})();
+
+</script>
+
+</body></html>

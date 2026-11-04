@@ -1,0 +1,10 @@
+{
+  "name": "escape1987",
+  "version": "1.0.0",
+  "private": true,
+  "description": "1987 가려진 기록 — 역사·과학·영어 융합 방탈출 게임",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "pg": "8.11.3" }
+}
