@@ -119,9 +119,9 @@ h1.pg{font:900 clamp(24px,4vw,34px)/1.25 var(--f-krs);margin:0 0 6px;text-wrap:b
 .bank.mini{margin-top:10px}.bank.mini::before{content:'단어 고르기';font:12px var(--f-kr);color:var(--muted);align-self:center;margin-right:2px}
 .bank button[aria-pressed=true]{background:#7fa39c;color:#0b100f}
 details.reread{margin:0 0 14px}details.reread>summary{cursor:pointer;display:inline-block;padding:7px 14px;border:1px solid var(--brass);color:var(--brass);border-radius:4px;font-weight:700;list-style:none}details.reread>summary::-webkit-details-marker{display:none}details.reread[open]>summary{margin-bottom:12px}
-.wbtn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;background:var(--brass);color:#1a1408;border:0;border-radius:24px;padding:10px 18px;font:700 15px var(--f-kr);box-shadow:0 6px 20px #0008;cursor:pointer}
+.wbtn{background:var(--brass);color:#1a1408;border:0;border-radius:4px;padding:5px 14px;font:700 14px var(--f-kr);cursor:pointer}.wbtn[aria-expanded=true]{outline:2px solid #fff6}
 .wpanel[hidden]{display:none}
-.wpanel{position:fixed;right:16px;bottom:calc(68px + env(safe-area-inset-bottom));z-index:41;width:min(380px,calc(100vw - 32px));max-height:min(70vh,600px);display:flex;flex-direction:column;background:#14201e;border:1px solid #ffffff22;border-radius:8px;box-shadow:0 20px 50px #000a}
+.wpanel{position:fixed;right:max(16px,calc((100vw - 1080px) / 2));top:96px;z-index:41;width:min(380px,calc(100vw - 32px));max-height:calc(100vh - 116px);display:flex;flex-direction:column;background:#14201e;border:1px solid #ffffff22;border-radius:8px;box-shadow:0 20px 50px #000a}
 .wpanel .wh{display:flex;gap:8px;align-items:center;padding:12px 14px;border-bottom:1px solid #ffffff14}.wpanel .wh b{flex:1}
 .wpanel input{width:100%;margin:10px 14px 4px;width:calc(100% - 28px);background:#0b100f;border:1px solid #ffffff22;color:inherit;border-radius:4px;padding:8px 10px;font:15px var(--f-kr)}
 .wpanel .wl{overflow:auto;padding:4px 14px 14px}.wpanel h4{margin:12px 0 4px;font:700 12px var(--f-kr);color:var(--brass);letter-spacing:.05em}
@@ -168,12 +168,11 @@ textarea.final{width:100%;min-height:200px;background:#fffdf6;color:#1d2f5c;bord
 </head>
 <body>
 <header class="top" id="top" hidden>
-  <div class="row"><div class="brand">1987 · <em>외신 미션</em></div><div class="me" id="me"></div></div>
+  <div class="row"><div class="brand">1987 · <em>외신 미션</em></div><div class="me" id="me"></div><button class="wbtn" id="wbtn" type="button" aria-expanded="false" aria-controls="wp">단어장</button></div>
   <nav class="steps" id="steps" aria-label="활동"></nav>
 </header>
 <main id="view"></main>
 <div id="ovRoot"></div>
-<button class="wbtn" id="wbtn" hidden aria-expanded="false" aria-controls="wp">단어장</button>
 <aside class="wpanel" id="wp" hidden aria-label="단어장"><div class="wh"><b>단어장</b><button class="btn" id="wx" style="padding:4px 10px">닫기</button></div><input id="wq" placeholder="영어나 한국어로 찾기" aria-label="단어 찾기"><div class="wl" id="wl"></div></aside>
 <script src="common.js"></script>
 <script>
@@ -190,7 +189,7 @@ async function api(path, body) { const r = await fetch('/api/m/' + path, body ? 
 function saveAct(act, data) { put(act + '_' + meKey(), data); api('student', { ...me, act: 'act' + act.slice(1), data }).catch(() => { }) }
 const STEPS = [['a1', '1', '형광펜으로 읽기'], ['a2', '2', 'T/F 확인'], ['a3', '3', '증거로 바로잡기'], ['a4', '4', '비밀 제보서 (조별)']];
 function nav(cur) {
-  $('#top').hidden = false; $('#wbtn').hidden = false;
+  $('#top').hidden = false;
   $('#me').innerHTML = `<b>${me.cls}반 ${me.no}번</b> · ${me.team}조 <button class="btn" style="padding:2px 10px;font-size:12px;margin-left:6px" id="out">바꾸기</button>`;
   $('#out').onclick = () => { me = null; put('me', null); location.hash = '' ; route() };
   $('#steps').innerHTML = STEPS.map(([k, n, t]) => { const done = k === 'a4' ? get('a4done_' + me.cls + '_' + me.team, false) : !!get(k + '_' + meKey(), null)?.done; return `<a href="#${k}" class="${k === cur ? 'on' : ''}"><b>활동 ${n}</b>${t}${done ? ' <span class="ok">✓</span>' : ''}</a>` }).join('');
@@ -208,7 +207,7 @@ function newspaper(opts = {}) {
 function flash(id) { const s = document.querySelector(`.s[data-id="${id}"]`); if (!s) return; s.scrollIntoView({ behavior: 'smooth', block: 'center' }); s.classList.add('flash'); setTimeout(() => s.classList.remove('flash'), 1800) }
 /* ---------- entry ---------- */
 function entry() {
-  $('#top').hidden = true; $('#wbtn').hidden = true; $('#wp').hidden = true;
+  $('#top').hidden = true; $('#wp').hidden = true;
   const v = $('#view'); v.innerHTML = `<section class="entry"><div class="eyebrow">2차시 · 평행세계 2026</div><h1>1987,<br>외신 기사와 비밀 제보</h1>
   <p class="lead">2026년, 이 세계에는 여전히 독재가 이어지고 신문은 막혀 있어요. 게임에서 찾은 진실을 바탕으로, 1987년 외신 기사가 무엇을 놓쳤는지 확인하고, 조원들과 함께 외국 기자에게 암호화한 비밀 제보서를 보내요.</p>
   <form id="f" autocomplete="off"><div class="grid3"><label for="c">반<input id="c" inputmode="numeric" maxlength="2" placeholder="2" required></label><label for="n">번호<input id="n" inputmode="numeric" maxlength="2" placeholder="7" required></label><label for="t">조<input id="t" inputmode="numeric" maxlength="2" placeholder="3" required></label></div>
@@ -329,7 +328,7 @@ function render() {
   if (st === 'final') { stopPoll(); if (!g.dataset.final) { g.dataset.final = '1'; finale(false) } return }
   const whoOn = f => Object.entries(G).filter(([k, v]) => k.startsWith('p_') && k !== 'p_' + me.no && v && v.f === f && Date.now() - v.t < 6000).map(([k]) => k.slice(2) + '번');
   if (!g.querySelector('.dossier')) {
-    g.innerHTML = `<div class="how"><h3>순서</h3><ol><li><b>조 이름(CODE NAME)</b>을 영어로 정해서 쓰세요. 실명·학교 이름은 쓰지 않아요.</li><li>표의 칸마다 <b>질문에 답하는 영어 문장</b>을 1~2개씩 자유롭게 쓰세요. 꼭 들어가야 할 것(✓)만 지키면 표현은 자유예요. 칸 아래 <b>쓸 수 있는 표현</b>을 누르면 글자가 들어가요. 모르는 단어는 오른쪽 아래 <b>단어장</b>에서 찾아요.</li><li>다 쓰면 <b>선생님께 검토 요청</b>을 누르세요. 피드백이 오면 완성본으로 옮겨 쓰고 <b>암호화하여 전송</b>해요.</li></ol></div>
+    g.innerHTML = `<div class="how"><h3>순서</h3><ol><li><b>조 이름(CODE NAME)</b>을 영어로 정해서 쓰세요. 실명·학교 이름은 쓰지 않아요.</li><li>표의 칸마다 <b>질문에 답하는 영어 문장</b>을 1~2개씩 자유롭게 쓰세요. 꼭 들어가야 할 것(✓)만 지키면 표현은 자유예요. 칸 아래 <b>쓸 수 있는 표현</b>을 누르면 글자가 들어가요. 모르는 단어는 오른쪽 위 <b>단어장</b>에서 찾아요.</li><li>다 쓰면 <b>선생님께 검토 요청</b>을 누르세요. 피드백이 오면 완성본으로 옮겨 쓰고 <b>암호화하여 전송</b>해요.</li></ol></div>
     <div class="dossier"><span class="ts">TOP SECRET</span><h2>SECRET TIP</h2><div style="font:15px var(--f-type)">TO: Foreign Reporter, Global Truth News · SECURE DROP 2026</div>
     <div class="fld" style="margin-top:14px"><label style="font:15px var(--f-type)">CODE NAME: <input class="codename" data-k="codename" maxlength="30" placeholder="우리 조 이름 (영어로)"></label></div>
     <table class="tipt"><tbody>${D.tip.map(t => `<tr><th>${t.h}</th><td><div class="q">${t.q}</div><div class="need">✓ ${t.need}</div><div class="fld"><textarea class="tw" data-k="${t.k}" maxlength="400" rows="2" aria-label="${t.h}" placeholder="영어로 1~2문장"></textarea></div><div class="starters">${t.starters.map(x => `<button type="button" data-ins="${t.k}">${esc(x)}</button>`).join('')}</div></td></tr>`).join('')}</tbody></table>
@@ -433,7 +432,7 @@ function telex() {
 (() => {
   const list = $('#wl'), q = $('#wq'), btn = $('#wbtn'), pn = $('#wp');
   const draw = () => { const k = q.value.trim().toLowerCase(); list.innerHTML = D.words.map(([sec, ws]) => { const f = ws.filter(([e, m]) => !k || e.toLowerCase().includes(k) || m.includes(k)); return f.length ? `<h4>${sec}</h4>` + f.map(([e, m]) => `<div class="w"><span>${esc(e)}</span><span>${esc(m)}</span></div>`).join('') : '' }).join('') || '<p class="msg">찾는 단어가 없어요.</p>' };
-  const open = v => { pn.hidden = !v; btn.setAttribute('aria-expanded', String(v)); if (v) { draw(); q.focus() } };
+  const open = v => { if (v) { const b = $('#top').getBoundingClientRect().bottom; pn.style.top = (b + 8) + 'px'; pn.style.maxHeight = `calc(100vh - ${b + 24}px)` } pn.hidden = !v; btn.setAttribute('aria-expanded', String(v)); if (v) { draw(); q.focus() } };
   btn.onclick = () => open(pn.hidden); $('#wx').onclick = () => open(false); q.oninput = draw;
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pn.hidden) open(false) });
 })();
