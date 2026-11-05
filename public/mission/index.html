@@ -53,6 +53,7 @@ h1.pg{font:900 clamp(24px,4vw,34px)/1.25 var(--f-krs);margin:0 0 6px;text-wrap:b
 .grid3 label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
 .grid3 input{background:#0b100f;border:1px solid var(--brass);border-radius:4px;padding:12px;font-size:18px;text-align:center}
 .credit{font-size:12px;color:#7e8d88;margin-top:24px}
+.resume{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:18px;padding:12px 14px;border:1px solid var(--brass);border-radius:6px;background:#c9a86a14}.resume b{display:block;color:var(--brass);font-size:13px}.resume span{font-size:14px}
 /* newspaper */
 .paper{background:var(--paper);color:var(--news);border-radius:3px;box-shadow:0 18px 50px #000a;padding:22px clamp(16px,4vw,40px) 28px;position:relative;background-image:radial-gradient(#0000000a 1px,transparent 1px);background-size:3px 3px}
 .mast{text-align:center;border-bottom:3px double var(--rule);padding-bottom:8px}
@@ -198,6 +199,7 @@ function saveAct(act, data) { put(act + '_' + meKey(), data); api('student', { .
 const STEPS = [['a1', '1', '형광펜으로 읽기'], ['a2', '2', 'T/F 확인'], ['a3', '3', '증거로 바로잡기'], ['a4', '4', '비밀 제보서 (조별)']];
 function alertMsg() { const m = document.querySelector('.msg'); if (m) m.textContent = '이 화면에는 채울 답이 없어요.' }
 function nav(cur) {
+  if (me) put('lastAt_' + meKey(), cur);
   $('#top').hidden = false;
   $('#me').innerHTML = `${isDemo() ? '<span class="demo-chip">교사 시연 모드</span> <button class="demo-btn" id="demoGo" type="button">시연: 정답 채우기</button> ' : ''}<b>${me.cls}반 ${me.no}번 ${esc(me.name || '')}</b> · ${me.team}조 <button class="btn" style="padding:2px 10px;font-size:12px;margin-left:6px" id="out">바꾸기</button>`;
   if (isDemo()) $('#demoGo').onclick = () => { if (demoFill) demoFill(); else alertMsg() };
@@ -222,9 +224,11 @@ function entry() {
   <p class="lead">2026년, 이 세계에는 여전히 독재가 이어지고 신문은 막혀 있어요. 게임에서 찾은 진실을 바탕으로, 1987년 외신 기사가 무엇을 놓쳤는지 확인하고, 조원들과 함께 외국 기자에게 암호화한 비밀 제보서를 보내요.</p>
   <form id="f" autocomplete="off"><div class="grid3"><label for="c">반<input id="c" inputmode="numeric" maxlength="2" placeholder="2" required></label><label for="n">번호<input id="n" inputmode="numeric" maxlength="2" placeholder="7" required></label><label for="t">조<input id="t" inputmode="numeric" maxlength="2" placeholder="3" required></label></div><label class="namerow" for="nm" style="display:block">이름<input id="nm" maxlength="12" placeholder="홍길동" required autocomplete="off"></label>
   <div class="actions"><button class="btn primary" type="submit">미션 시작</button><span class="msg err" id="e"></span></div></form>
+  <div id="resume"></div>
   <p class="credit">made by. 나수진쌤 &amp; 전소현쌤 · 교사용 화면은 <a href="teacher.html" style="color:var(--brass)">teacher.html</a></p></section>`;
+  const lm = get('lastMe', null); if (lm && lm.cls) { const la = get('lastAt_' + lm.cls + '_' + lm.no, 'a1'), lab = { a1: '활동 1', a2: '활동 2', a3: '활동 3', a4: '활동 4' }[la] || '활동 1'; $('#resume').innerHTML = `<div class="resume"><div><b>이어서 하기</b><span>${esc(lm.cls)}반 ${esc(lm.no)}번 ${esc(lm.name || '')} · ${esc(lm.team)}조 · ${lab}부터</span></div><button class="btn primary" id="rs" type="button">이어서 하기 ▶</button></div>`; $('#rs').onclick = () => { me = lm; put('me', me); api('student', me).catch(() => { }); location.hash = la; route() } }
   if (me) { $('#c').value = me.cls; $('#n').value = me.no; $('#t').value = me.team; $('#nm').value = me.name || '' }
-  $('#f').onsubmit = e => { e.preventDefault(); const c = num($('#c').value), n = num($('#n').value), t = num($('#t').value), nm = $('#nm').value.trim(); if (!c || !n || !t) { $('#e').textContent = '반, 번호, 조를 모두 숫자로 입력하세요.'; return } if (!nm) { $('#e').textContent = '이름을 입력하세요.'; return } me = { cls: c, no: n, team: t, name: nm }; put('me', me); (isDemo() ? demoReset() : Promise.resolve()).then(() => api('student', me)).catch(() => { }); location.hash = 'a1'; route() };
+  $('#f').onsubmit = e => { e.preventDefault(); const c = num($('#c').value), n = num($('#n').value), t = num($('#t').value), nm = $('#nm').value.trim(); if (!c || !n || !t) { $('#e').textContent = '반, 번호, 조를 모두 숫자로 입력하세요.'; return } if (!nm) { $('#e').textContent = '이름을 입력하세요.'; return } me = { cls: c, no: n, team: t, name: nm }; put('me', me); if (!isDemo()) put('lastMe', me); (isDemo() ? demoReset() : Promise.resolve()).then(() => api('student', me)).catch(() => { }); location.hash = 'a1'; route() };
 }
 /* ---------- 활동 1 ---------- */
 function act1() {
@@ -457,6 +461,7 @@ function route() {
   stopPoll(); $('#ovRoot').innerHTML = ''; demoFill = null;
   const h = location.hash.slice(1);
   if (!me) { entry(); return }
+  if (!h) { const la = get('lastAt_' + meKey(), 'a1'); if (la !== 'a1') { location.hash = la; return } }
   if (h === 'a2') act2(); else if (h === 'a3') act3(); else if (h === 'a4') act4(); else act1();
   window.scrollTo(0, 0);
 }
