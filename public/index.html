@@ -231,6 +231,7 @@ button{cursor:pointer}
 .notice .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
 .linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:12.5px;padding:4px}
 #intro{background:#000}
+#prologue{position:fixed;inset:0;z-index:70;background:#000;display:flex;align-items:center;justify-content:center}#prologue[hidden]{display:none}#prologue video{width:100%;height:100%;object-fit:contain;background:#000}#pvSkip{position:absolute;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:2;background:#000a;border:1px solid #fff6;color:#fff;font-weight:700;padding:10px 18px}#pvSkip:hover{background:#000d}#pvTap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;padding:12px 22px}
 #intro .bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;filter:saturate(.8)}
 #intro .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#000d 0,#0008 55%,#0003)}
 #intro .inner{position:relative;max-width:1000px;width:100%;display:grid;gap:18px}
@@ -360,6 +361,7 @@ table.dash tr:hover td{background:#ffffff06}
 </section>
 
 <!-- 도입 장면 -->
+<div id="prologue" hidden role="dialog" aria-label="프롤로그 영상"><video id="pv" playsinline preload="none"></video><button class="btn primary" id="pvTap" hidden>▶ 영상 재생</button><button class="btn" id="pvSkip">건너뛰기 ▶▶</button></div>
 <section class="screen" id="intro" hidden>
   <div class="bg" id="introBg"></div>
   <div class="inner">
@@ -802,6 +804,7 @@ const $ = s => document.querySelector(s), el = (t, c, h) => { const e = document
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ORDER = Object.keys(Q);
 let TEACHER = location.hash === '#teacher';
+let DEMO = false; // 교사 시연 모드: 0반 0번 수소티 → 서버 전송 없음, 정답 채우기 버튼
 const TEACHER_PW = '7891';
 const LS = 'esc87v2_';
 const SCI = new Set(['1-3', '2-1', '2-2', '2-3', '2-4', '2-5', '3-1', '3-4', '3-5', '4-4', '5-1', '5-2', '5-3', '5-4', '5-5']);
@@ -811,7 +814,7 @@ let S = null;
 function fresh(cls, no, name) { return { cls, no, name, room: 0, solved: {}, clues: [], hints: 0, wrong: 0, t0: Date.now(), cleared: [], done: false, signed: false, signName: '', signedAt: 0, nb: emptyNb(), seenTip: 0 } }
 function emptyNb() { return { summary: '', claim: '', conf: '', ev: [{ t: '', m: '' }, { t: '', m: '' }, { t: '', m: '' }], sci: '', hide: '', en: '' } }
 const skey = (cls, no) => cls + '_' + no;
-function save() { if (!S) return; S.lastAt = Date.now(); try { localStorage.setItem(LS + skey(S.cls, S.no), JSON.stringify(S)); localStorage.setItem(LS + 'last', skey(S.cls, S.no)) } catch (e) { } Sync.push() }
+function save() { if (!S) return; S.lastAt = Date.now(); if (DEMO) return; try { localStorage.setItem(LS + skey(S.cls, S.no), JSON.stringify(S)); localStorage.setItem(LS + 'last', skey(S.cls, S.no)) } catch (e) { } Sync.push() }
 function load(no) { try { const s = JSON.parse(localStorage.getItem(LS + no) || 'null'); return s && typeof s.room === 'number' ? s : null } catch (e) { return null } }
 
 /* ---------------- sync (db) ---------------- */
@@ -849,7 +852,7 @@ function safeId(s) { return String(s).replace(/[^0-9A-Za-z_-]/g, '_').slice(0, 4
 function summary(st = S, upd = Date.now()) {
   return { cls: st.cls || '', no: st.no, name: st.name, room: st.room, solved: Object.keys(st.solved).filter(k => st.solved[k] === 1), revealed: Object.keys(st.solved).filter(k => st.solved[k] === 'r'), hints: st.hints, wrong: st.wrong, t0: st.t0, updated: upd, done: !!st.done, cleared: st.cleared, signed: !!st.signed, signName: st.signName || '', signedAt: st.signedAt || 0, nb: st.nb };
 }
-function badge() { const b = $('#who'); if (!b || !S) return; const st = Sync.state; b.innerHTML = `<b>${esc(S.cls)}반 ${esc(S.no)}번 ${esc(S.name)}</b><span class="sync ${st === 'on' ? 'on' : st === 'err' ? 'err' : 'off'}" title="${st === 'on' ? '진행 상황이 선생님 화면에 보내지고 있어요' : st === 'err' ? '선생님 화면에 보내지 못했어요. 이 기기에는 저장돼요' : '이 기기에만 저장돼요'}">${st === 'on' ? '● 전송 중' : st === 'err' ? '전송 안 됨' : '이 기기 저장'}</span>` }
+function badge() { const b = $('#who'); if (!b || !S) return; if (DEMO) { b.innerHTML = `<b>교사 시연 모드</b><span class="sync err" title="선생님 화면으로 보내지 않아요">기록 안 남김</span>`; return } const st = Sync.state; b.innerHTML = `<b>${esc(S.cls)}반 ${esc(S.no)}번 ${esc(S.name)}</b><span class="sync ${st === 'on' ? 'on' : st === 'err' ? 'err' : 'off'}" title="${st === 'on' ? '진행 상황이 선생님 화면에 보내지고 있어요' : st === 'err' ? '선생님 화면에 보내지 못했어요. 이 기기에는 저장돼요' : '이 기기에만 저장돼요'}">${st === 'on' ? '● 전송 중' : st === 'err' ? '전송 안 됨' : '이 기기 저장'}</span>` }
 
 /* ---------------- 3D world ---------------- */
 const imgEls = {};
@@ -941,7 +944,7 @@ function openQ(id) {
   const body = el('div', 'sh-body'); body.appendChild(el('div', 'paper' + (q.real ? ' real' : ''), `<div class="obj">수집 자료 · ${q.obj}</div>${q.doc}`));
   const parts = el('div', 'parts'); const pe = q.parts.map(p => { const e = renderPart(p); parts.appendChild(e); return e }); body.appendChild(parts); wrap.appendChild(body);
   const hb = el('div', 'hintbox'); hb.hidden = true; hb.innerHTML = `<b>힌트</b> · ${q.hint}`; wrap.appendChild(hb);
-  const foot = el('div', 'sh-foot'); foot.innerHTML = `<button class="btn" id="bHint">힌트 보기</button><p class="fb" id="fb" aria-live="polite">답을 모두 고른 뒤 제출하세요.</p>${TEACHER ? '<button class="btn" id="bFill">교사용: 정답 채우기</button>' : ''}<button class="btn" id="bReveal" hidden>정답 공개</button><button class="btn primary" id="bSubmit">제출</button>`; wrap.appendChild(foot);
+  const foot = el('div', 'sh-foot'); foot.innerHTML = `<button class="btn" id="bHint">힌트 보기</button><p class="fb" id="fb" aria-live="polite">답을 모두 고른 뒤 제출하세요.</p>${TEACHER ? `<button class="btn${DEMO ? ' primary' : ''}" id="bFill">${DEMO ? '시연: 정답 채우기' : '교사용: 정답 채우기'}</button>` : ''}<button class="btn" id="bReveal" hidden>정답 공개</button><button class="btn primary" id="bSubmit">제출</button>`; wrap.appendChild(foot);
   let tries = 0, usedHint = false;
   overlay(wrap, closeModal); wrap.querySelector('.x').onclick = closeModal;
   $('#bHint').onclick = () => { hb.hidden = false; if (!usedHint) { usedHint = true; S.hints++; save() } };
@@ -976,10 +979,10 @@ function fadeCard(i, cb) { const rm = ROOMS[i]; const f = $('#fade'); f.style.ba
 function go(i) { fadeCard(i, () => { S.room = i; S.view = 0; save(); enterRoom() }) }
 function enterRoom() { const rm = ROOMS[S.room]; World.build(S.room, S.view || 0); $('#hEye').textContent = `SPACE ${S.room + 1} / 5`; $('#hName').textContent = rm.name; $('#hSub').textContent = rm.sub; refreshHud() }
 function keypad() {
-  const w = el('div', 'clearbox'); w.innerHTML = `<div class="chip">FINAL · 5-5 (3)</div><h2>다섯 공간의 열쇠 글자를 입력하라</h2><p style="color:var(--muted)">공간 1 → 5 순서로 얻은 글자</p><div class="keypad">${[0, 1, 2, 3, 4].map(i => `<input id="kp${i}" maxlength="1" aria-label="${i + 1}번째 글자" autocomplete="off">`).join('')}</div><p class="fb" id="kfb" aria-live="polite"></p><div style="display:flex;gap:8px"><button class="btn" id="kClose">닫기</button><button class="btn primary" id="kGo">열기</button></div>`;
+  const w = el('div', 'clearbox'); w.innerHTML = `<div class="chip">FINAL · 5-5 (3)</div><h2>다섯 공간의 열쇠 글자를 입력하라</h2><p style="color:var(--muted)">공간 1 → 5 순서로 얻은 글자</p><div class="keypad">${[0, 1, 2, 3, 4].map(i => `<input id="kp${i}" maxlength="1" aria-label="${i + 1}번째 글자" autocomplete="off">`).join('')}</div><p class="fb" id="kfb" aria-live="polite"></p><div style="display:flex;gap:8px"><button class="btn" id="kClose">닫기</button>${TEACHER ? `<button class="btn" id="kFill">${DEMO ? '시연: 정답 채우기' : '교사용: 정답 채우기'}</button>` : ''}<button class="btn primary" id="kGo">열기</button></div>`;
   overlay(w, closeModal, true); const ins = [...w.querySelectorAll('input')];
   ins.forEach((x, i) => { x.oninput = () => { x.value = x.value.toUpperCase().replace(/[^A-Z]/g, ''); if (x.value && ins[i + 1]) ins[i + 1].focus() }; x.onkeydown = e => { if (e.key === 'Backspace' && !x.value && ins[i - 1]) ins[i - 1].focus(); if (e.key === 'Enter') $('#kGo').click() } });
-  ins[0].focus(); $('#kClose').onclick = closeModal;
+  ins[0].focus(); $('#kClose').onclick = closeModal; if (TEACHER) $('#kFill').onclick = () => 'TRUTH'.split('').forEach((c, i) => ins[i].value = c);
   $('#kGo').onclick = () => { const v = ins.map(x => x.value).join(''); if (v === 'TRUTH') { closeModal(); finish() } else { S.wrong++; save(); $('#kfb').className = 'fb err'; $('#kfb').textContent = '금고가 열리지 않는다. 화면 위쪽의 열쇠 글자를 순서대로 읽어 보자.' } };
 }
 function hideGame() { $('#hot').hidden = true; $('#hud').hidden = true; $('#prompt').hidden = true; $('#cross').hidden = true; World.setEnabled(false) }
@@ -1008,7 +1011,7 @@ function openNotebook() {
       <div class="fld"><label for="nbSci">4. 과학 원리로 설명하기</label><span class="sub">산소가 세포까지 가는 길(호흡·순환)을 써서, 증거가 왜 그 사망 원인을 가리키는지 설명하세요.</span><div class="bank" id="nbBank">${WORDBANK.map(b => `<button type="button">${b}</button>`).join('')}</div><textarea id="nbSci" placeholder="기도가 막히면 산소가 폐로 들어가지 못하고, ...">${esc(nb.sci)}</textarea></div>
       <div class="fld"><label for="nbHide">5. 진실을 숨기려 한 흔적</label><textarea id="nbHide" placeholder="요약본, 보도 지시 쪽지, ...">${esc(nb.hide)}</textarea></div>
       <div class="fld"><label for="nbEn">6. 영어 한 문장 (선택)</label><input type="text" id="nbEn" placeholder="It was not shock. It was asphyxia." value="${esc(nb.en)}"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="nbPng">수첩·서명 이미지로 저장</button><button class="btn" id="nbClose">닫기</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${DEMO ? '<button class="btn" id="nbDemo">시연: 수첩 채우기</button>' : ''}<button class="btn primary" id="nbPng">수첩·서명 이미지로 저장</button><button class="btn" id="nbClose">닫기</button></div>
       <p class="fb" id="nbMsg" aria-live="polite"></p>
     </div>
   </div>`;
@@ -1021,6 +1024,7 @@ function openNotebook() {
   $('#nbBank').querySelectorAll('button').forEach(b => b.onclick = () => { const t = lastFocus && lastFocus.tagName === 'TEXTAREA' ? lastFocus : $('#nbSci'); const pos = t.selectionStart ?? t.value.length; t.value = t.value.slice(0, pos) + b.textContent + t.value.slice(pos); t.focus(); t.selectionStart = t.selectionEnd = pos + b.textContent.length; autosave() });
   const close = () => { readNb(); save(); closeModal() };
   w.querySelector('.x').onclick = close; $('#nbClose').onclick = close;
+  if (DEMO) $('#nbDemo').onclick = () => { const v = { nbSum: '1987년 1월 14일, 서울의 경찰 조사실에서 대학생이 조사를 받다가 숨졌다. 경찰은 책상을 “탁” 치니 “억” 하고 쓰러졌다며 쇼크사라고 발표했다.', nbClaim: '질식 (호흡의 문제)', nbConf: 'must (거의 확실하다)', nbEv0: '의사가 폐에서 물소리를 들었다', nbEm0: '물이 기도로 들어가 숨을 막았다', nbEv1: '목과 가슴에 멍 자국, 폐에 출혈 반점이 있었다', nbEm1: '강한 압박으로 숨을 쉬지 못했다', nbEv2: '부검 소견: “질식한 것으로 보임”', nbEm2: '사망 원인은 쇼크가 아니라 질식이다', nbSci: '기도가 막히면 산소가 폐로 들어가지 못하고, 피가 산소를 세포까지 운반하지 못한다. 산소가 없으면 세포는 에너지를 만들 수 없어 숨지게 된다. 그래서 질식이 사망 원인이다.', nbHide: '경찰은 원본 기록 대신 요약본을 내놓았고, 신문사에 ‘쇼크사라고만 쓸 것’이라는 보도 지시 쪽지를 보냈다.', nbEn: 'It was not shock. It was asphyxia.' }; Object.entries(v).forEach(([id, t]) => { const x = $('#' + id); if (x) x.value = t }); readNb(); save(); $('#nbSaved').textContent = '시연 내용 채움' };
   $('#nbPng').onclick = async () => { readNb(); save(); await saveNotebookPng(S, $('#nbMsg')) };
 }
 async function drawNotebook(st) {
@@ -1117,8 +1121,17 @@ function updateResume() { const no = normNum($('#sNo').value), cls = normNum($('
 $('#sNo').addEventListener('input', updateResume); $('#sCls').addEventListener('input', updateResume);
 function normNum(v) { const m = String(v || '').match(/\d+/); return m ? String(parseInt(m[0], 10)) : '' }
 const normCls = normNum;
-function readLogin() { const cls = normNum($('#sCls').value), no = normNum($('#sNo').value), name = $('#sName').value.trim(); if (!cls || +cls < 1 || +cls > 30) { $('#loginErr').textContent = '반을 숫자로 입력하세요. (예: 2)'; $('#sCls').focus(); return null } if (!no || +no < 1 || +no > 60) { $('#loginErr').textContent = '번호를 숫자로 입력하세요. (예: 7)'; $('#sNo').focus(); return null } if (!name) { $('#loginErr').textContent = '이름을 입력하세요.'; $('#sName').focus(); return null } $('#loginErr').textContent = ''; return { cls, no, name } }
-$('#loginForm').addEventListener('submit', e => { e.preventDefault(); const L = readLogin(); if (!L) return; S = fresh(L.cls, L.no, L.name); save(); startIntro() });
+function readLogin() { const cls = normNum($('#sCls').value), no = normNum($('#sNo').value), name = $('#sName').value.trim(); DEMO = cls === '0' && no === '0' && name === '수소티'; if (DEMO) { if (!TEACHER) { TEACHER = true; window._demoT = true } $('#loginErr').textContent = ''; return { cls, no, name } } if (window._demoT) { TEACHER = false; window._demoT = false } if (!cls || +cls < 1 || +cls > 30) { $('#loginErr').textContent = '반을 숫자로 입력하세요. (예: 2)'; $('#sCls').focus(); return null } if (!no || +no < 1 || +no > 60) { $('#loginErr').textContent = '번호를 숫자로 입력하세요. (예: 7)'; $('#sNo').focus(); return null } if (!name) { $('#loginErr').textContent = '이름을 입력하세요.'; $('#sName').focus(); return null } $('#loginErr').textContent = ''; return { cls, no, name } }
+const PROLOGUE = 'video/prologue.mp4';
+function playPrologue(done) {
+  const box = $('#prologue'), v = $('#pv'); if (!box || location.protocol === 'file:') { done(); return }
+  let ended = false; const end = () => { if (ended) return; ended = true; v.pause(); v.removeAttribute('src'); v.load(); box.hidden = true; document.removeEventListener('keydown', key); done() };
+  const key = e => { if (e.key === 'Escape') end() };
+  $('#notice').hidden = true; box.hidden = false; $('#pvTap').hidden = true; v.src = PROLOGUE; v.onended = end; v.onerror = end; document.addEventListener('keydown', key);
+  $('#pvSkip').onclick = end; $('#pvSkip').focus();
+  v.play().catch(() => { $('#pvTap').hidden = false; $('#pvTap').onclick = () => { $('#pvTap').hidden = true; v.play().catch(end) } });
+}
+$('#loginForm').addEventListener('submit', e => { e.preventDefault(); const L = readLogin(); if (!L) return; S = fresh(L.cls, L.no, L.name); save(); badge(); playPrologue(startIntro) });
 $('#bResume').onclick = () => { const L = readLogin(); if (!L) return; S = load(skey(L.cls, L.no)); S.name = L.name; S.nb = S.nb || emptyNb(); save(); if (S.signed) { $('#notice').hidden = true; showFinal() } else if (S.done) { $('#notice').hidden = true; showEnd() } else play() };
 function startIntro() { $('#notice').hidden = true; const it = $('#intro'); it.hidden = false; const ls = [...it.querySelectorAll('.line')]; ls.forEach(l => l.classList.remove('on')); const rm = matchMedia('(prefers-reduced-motion: reduce)').matches; ls.forEach((l, i) => setTimeout(() => l.classList.add('on'), rm ? 0 : 400 + i * 1000)) }
 async function play() {
@@ -1132,7 +1145,7 @@ $('#bEnter').onclick = () => { fadeCard(0, () => play()) };
 // mobile pad
 document.querySelectorAll('#pad button').forEach(b => { const k = b.dataset.k; const on = e => { e.preventDefault(); World.setVirtual(k, true) }, off = () => World.setVirtual(k, false); b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off) });
 // end → sign → final
-$('#bToSign').onclick = () => { $('#end').hidden = true; $('#sign').hidden = false; $('#sigName').value = ''; $('#sigChk').checked = false; $('#sigErr').textContent = ''; $('#sigName').focus() };
+$('#bToSign').onclick = () => { $('#end').hidden = true; $('#sign').hidden = false; $('#sigName').value = DEMO ? '수소티' : ''; $('#sigChk').checked = DEMO; $('#sigErr').textContent = ''; $('#sigName').focus() };
 $('#bSignBack').onclick = () => { $('#sign').hidden = true; showEnd() };
 $('#bSign').onclick = () => { const n = $('#sigName').value.trim(); if (!n) { $('#sigErr').textContent = '이름을 직접 써서 서명하세요.'; $('#sigName').focus(); return } if (!$('#sigChk').checked) { $('#sigErr').textContent = '동참한다면 체크 상자에 표시하세요.'; return } S.signed = true; S.signName = n; S.signedAt = Date.now(); save(); $('#sign').hidden = true; showFinal() };
 function showFinal() { ['#notice', '#end', '#sign'].forEach(s => $(s).hidden = true); $('#final').hidden = false; $('#certName').textContent = S.signName; $('#certMeta').textContent = `${S.cls}반 ${S.no}번 · ${new Date(S.signedAt).toLocaleString('ko-KR')}` }
