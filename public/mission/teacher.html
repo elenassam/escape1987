@@ -85,9 +85,10 @@ function draw() {
   const S = DATA.students.filter(s => s.cls === tab), G = DATA.groups.filter(g => g.cls === tab);
   const done = k => S.filter(s => s[k]).length, rev = G.filter(g => g.status === 'review').length;
   $('#tiles').innerHTML = `<div class="tile"><b>${S.length}</b><span>접속한 학생</span></div><div class="tile"><b>${done('act1')}/${S.length}</b><span>활동 1 제출</span></div><div class="tile"><b>${done('act2')}/${S.length}</b><span>활동 2 제출</span></div><div class="tile"><b>${done('act3')}/${S.length}</b><span>활동 3 제출</span></div><div class="tile ${rev ? 'alert' : ''}"><b>${rev}</b><span>피드백 기다리는 조</span></div><div class="tile"><b>${G.filter(g => g.status === 'final').length}/${G.length}</b><span>제보서 전송 완료 조</span></div>`;
-  drawGroups(G); drawTable(S);
+  drawGroups(G, S); drawTable(S);
 }
-function drawGroups(G) {
+function drawGroups(G, S = []) {
+  const who = no => { const x = S.find(s => s.no === no); return no + '번' + (x && x.name ? ' ' + esc(x.name) : '') };
   const order = { review: 0, editing: 1, feedback: 2, final: 3 };
   G = G.slice().sort((a, b) => (order[a.status || 'editing'] - order[b.status || 'editing']) || n(a.team) - n(b.team));
   const host = $('#groups'); const active = document.activeElement && document.activeElement.dataset.g;
@@ -96,7 +97,7 @@ function drawGroups(G) {
   const html = G.map(g => { const id = g.cls + '_' + g.team, st = g.status || 'editing'; const mem = Object.keys(g).filter(k => k.startsWith('m_')).map(k => k.slice(2)).sort((a, b) => n(a) - n(b));
     const filled = keys.filter(k => (g[k] || '').trim()).length; const wc = (String(g.final || '').match(/\S+/g) || []).length;
     return `<article class="g ${st}" data-id="${id}"><span class="st ${st}">${{ editing: '작성 중', review: '검토 요청', feedback: '피드백 보냄', final: '전송 완료' }[st]}</span>
-    <h3>${g.team}조 · ${esc(g.codename || '(CODE NAME 없음)')}</h3><div class="meta">조원 ${mem.length ? mem.map(m => m + '번').join(', ') : '-'} · 표 ${filled}/${keys.length}칸${g.reviewAt ? ' · 검토 요청 ' + new Date(g.reviewAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
+    <h3>${g.team}조 · ${esc(g.codename || '(CODE NAME 없음)')}</h3><div class="meta">조원 ${mem.length ? mem.map(who).join(', ') : '-'} · 표 ${filled}/${keys.length}칸${g.reviewAt ? ' · 검토 요청 ' + new Date(g.reviewAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
     <dl>${D.tip.map(t => `<dt>${t.h}</dt><dd class="${g[t.k] ? '' : 'e'}">${g[t.k] ? esc(g[t.k]) : '(아직 안 씀)'}</dd>`).join('')}</dl>
     ${st === 'final' ? `<div class="final"><b style="font:700 11px var(--f);color:#a3261c">전송한 완성본 · ${wc}단어</b><br>${esc(g.final)}</div>` : g.final ? `<div class="final" style="opacity:.75"><b style="font:700 11px var(--f);color:#6b5a3a">작성 중인 완성본 · ${wc}단어</b><br>${esc(g.final)}</div>` : ''}
     ${st !== 'final' ? `<textarea data-g="${id}" placeholder="이 조에 보낼 피드백을 쓰세요">${esc(drafts[id] ?? g.t_feedback ?? '')}</textarea>
@@ -109,15 +110,15 @@ function drawGroups(G) {
   host.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { const id = b.dataset.add, t = host.querySelector(`textarea[data-g="${id}"]`); t.value = (t.value ? t.value.trim() + '\n' : '') + b.textContent; drafts[id] = t.value; t.focus() });
   host.querySelectorAll('[data-send]').forEach(b => b.onclick = async () => { const id = b.dataset.send, [cls, team] = id.split('_'), t = host.querySelector(`textarea[data-g="${id}"]`); if (!t.value.trim()) { t.focus(); return } b.disabled = true; await fetch('/api/m/feedback', { method: 'POST', headers: H(), body: JSON.stringify({ cls, team, feedback: t.value }) }); delete drafts[id]; DATA = await fetchAll(); draw() });
 }
-const COLS = [['no', '번호'], ['team', '조'], ['a1', '활동 1 형광펜'], ['a2', '활동 2 T/F'], ['a3', '활동 3 증거'], ['up', '마지막 활동']];
+const COLS = [['no', '번호'], ['name', '이름'], ['team', '조'], ['a1', '활동 1 형광펜'], ['a2', '활동 2 T/F'], ['a3', '활동 3 증거'], ['up', '마지막 활동']];
 function cellScore(a, tot) { if (!a) return '<span class="pill none">미제출</span>'; const r = a.score / (a.total || tot); return `<span class="pill ${r >= .8 ? 'ok' : r >= .5 ? 'mid' : 'low'}">${a.score}/${a.total || tot}</span><span class="bar"><i style="width:${Math.round(r * 100)}%"></i></span>${a.tries > 1 ? ` <span class="note">${a.tries}회</span>` : ''}` }
 function drawTable(S) {
   $('#th').innerHTML = COLS.map(([k, t]) => `<th data-k="${k}">${t}${sortKey === k ? ' ▾' : ''}</th>`).join('');
   $('#th').querySelectorAll('th').forEach(th => th.onclick = () => { sortKey = th.dataset.k; draw() });
-  const val = (s, k) => k === 'no' ? n(s.no) : k === 'team' ? n(s.team) * 100 + n(s.no) : k === 'up' ? -(s.updated || 0) : -(s[{ a1: 'act1', a2: 'act2', a3: 'act3' }[k]]?.score ?? -1);
+  const val = (s, k) => k === 'name' ? (s.name || '') : k === 'no' ? n(s.no) : k === 'team' ? n(s.team) * 100 + n(s.no) : k === 'up' ? -(s.updated || 0) : -(s[{ a1: 'act1', a2: 'act2', a3: 'act3' }[k]]?.score ?? -1);
   S = S.slice().sort((a, b) => val(a, sortKey) - val(b, sortKey));
   const ago = t => { const s = Math.round((Date.now() - t) / 1000); return s < 60 ? '방금' : s < 3600 ? Math.round(s / 60) + '분 전' : Math.round(s / 3600) + '시간 전' };
-  $('#tb').innerHTML = S.length ? S.map(s => `<tr><td>${s.no}번</td><td>${s.team}조</td><td>${cellScore(s.act1, 7)}</td><td>${cellScore(s.act2, 6)}</td><td>${cellScore(s.act3, 9)}</td><td class="note">${s.updated ? ago(s.updated) : '-'}</td></tr>`).join('') : '<tr><td colspan="6" class="note">이 반 학생 기록이 없어요.</td></tr>';
+  $('#tb').innerHTML = S.length ? S.map(s => `<tr><td>${s.no}번</td><td>${esc(s.name || '-')}</td><td>${s.team}조</td><td>${cellScore(s.act1, 10)}</td><td>${cellScore(s.act2, 6)}</td><td>${cellScore(s.act3, 9)}</td><td class="note">${s.updated ? ago(s.updated) : '-'}</td></tr>`).join('') : '<tr><td colspan="7" class="note">이 반 학생 기록이 없어요.</td></tr>';
 }
 $('#clr').onclick = () => { if (!tab) return; $('#cf').innerHTML = `<div class="confirm">${tab}반의 개인 활동과 조별 제보서 기록을 모두 지울까요? 되돌릴 수 없어요. <button class="btn" id="cy">지우기</button> <button class="btn" id="cn">취소</button></div>`; $('#cn').onclick = () => $('#cf').innerHTML = ''; $('#cy').onclick = async () => { await fetch('/api/m/clear', { method: 'POST', headers: H(), body: JSON.stringify({ cls: tab }) }); $('#cf').innerHTML = ''; DATA = await fetchAll(); draw() } };
 })();

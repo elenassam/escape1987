@@ -48,6 +48,8 @@ h1.pg{font:900 clamp(24px,4vw,34px)/1.25 var(--f-krs);margin:0 0 6px;text-wrap:b
 .entry .eyebrow{font:700 12px var(--f-kr);letter-spacing:.2em;color:var(--brass)}
 .entry h1{font:900 clamp(30px,6vw,46px)/1.15 var(--f-krs);margin:8px 0 10px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.namerow{margin-top:10px}.namerow input{width:100%}
+.demo-chip{background:#7a2a1f;color:#ffd9cf;border-radius:4px;padding:3px 8px;font:700 12px var(--f-kr)}.demo-btn{background:#e2553f;color:#fff;border:0;border-radius:4px;padding:5px 12px;font:700 13px var(--f-kr);cursor:pointer}
 .grid3 label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
 .grid3 input{background:#0b100f;border:1px solid var(--brass);border-radius:4px;padding:12px;font-size:18px;text-align:center}
 .credit{font-size:12px;color:#7e8d88;margin-top:24px}
@@ -185,12 +187,25 @@ const get = (k, d) => { try { const v = localStorage.getItem(LS(k)); return v ? 
 const put = (k, v) => { try { localStorage.setItem(LS(k), JSON.stringify(v)) } catch (e) { } };
 let me = get('me', null);
 const meKey = () => me.cls + '_' + me.no;
-async function api(path, body) { const r = await fetch('/api/m/' + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : { cache: 'no-store' }); if (!r.ok) throw new Error(r.status); return r.json() }
+/* ---------- 교사 시연 모드: 0반 0번 0조 수소티 ---------- */
+const isDemo = () => !!me && me.cls === '0' && me.no === '0' && me.team === '0' && me.name === '수소티';
+let demoG = {}, demoFill = null;
+function demoReset() { demoG = {}; Object.keys(localStorage).filter(k => k.startsWith('m87_') && /_0_0$/.test(k)).forEach(k => { try { localStorage.removeItem(k) } catch (e) { } }); ['a1_0_0', 'a2_0_0', 'a3_0_0', 'a4done_0_0'].forEach(k => put(k, null)) }
+function demoApi(path, body) {
+  if (path.startsWith('group')) {
+    if (body) { const p = body.patch || {}; Object.assign(demoG, p, { cls: '0', team: '0', updated: Date.now() }); if (body.status === 'review') { demoG.status = 'review'; setTimeout(() => { if (demoG.status === 'review') { demoG.status = 'feedback'; demoG.t_feedback = '[시연] 날짜·장소·원인이 분명하고, 증거가 두 가지 잘 들어갔어요. 완성본으로 옮겨 써 보세요.' } }, 1800) } if (body.status === 'final') demoG.status = 'final' }
+    return Promise.resolve({ ...demoG })
+  }
+  return Promise.resolve({ ok: true })
+}
+async function api(path, body) { if (isDemo()) return demoApi(path, body); const r = await fetch('/api/m/' + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : { cache: 'no-store' }); if (!r.ok) throw new Error(r.status); return r.json() }
 function saveAct(act, data) { put(act + '_' + meKey(), data); api('student', { ...me, act: 'act' + act.slice(1), data }).catch(() => { }) }
 const STEPS = [['a1', '1', '형광펜으로 읽기'], ['a2', '2', 'T/F 확인'], ['a3', '3', '증거로 바로잡기'], ['a4', '4', '비밀 제보서 (조별)']];
+function alertMsg() { const m = document.querySelector('.msg'); if (m) m.textContent = '이 화면에는 채울 답이 없어요.' }
 function nav(cur) {
   $('#top').hidden = false;
-  $('#me').innerHTML = `<b>${me.cls}반 ${me.no}번</b> · ${me.team}조 <button class="btn" style="padding:2px 10px;font-size:12px;margin-left:6px" id="out">바꾸기</button>`;
+  $('#me').innerHTML = `${isDemo() ? '<span class="demo-chip">교사 시연 모드</span> <button class="demo-btn" id="demoGo" type="button">시연: 정답 채우기</button> ' : ''}<b>${me.cls}반 ${me.no}번 ${esc(me.name || '')}</b> · ${me.team}조 <button class="btn" style="padding:2px 10px;font-size:12px;margin-left:6px" id="out">바꾸기</button>`;
+  if (isDemo()) $('#demoGo').onclick = () => { if (demoFill) demoFill(); else alertMsg() };
   $('#out').onclick = () => { me = null; put('me', null); location.hash = '' ; route() };
   $('#steps').innerHTML = STEPS.map(([k, n, t]) => { const done = k === 'a4' ? get('a4done_' + me.cls + '_' + me.team, false) : !!get(k + '_' + meKey(), null)?.done; return `<a href="#${k}" class="${k === cur ? 'on' : ''}"><b>활동 ${n}</b>${t}${done ? ' <span class="ok">✓</span>' : ''}</a>` }).join('');
 }
@@ -210,11 +225,11 @@ function entry() {
   $('#top').hidden = true; $('#wp').hidden = true;
   const v = $('#view'); v.innerHTML = `<section class="entry"><div class="eyebrow">2차시 · 평행세계 2026</div><h1>1987,<br>외신 기사와 비밀 제보</h1>
   <p class="lead">2026년, 이 세계에는 여전히 독재가 이어지고 신문은 막혀 있어요. 게임에서 찾은 진실을 바탕으로, 1987년 외신 기사가 무엇을 놓쳤는지 확인하고, 조원들과 함께 외국 기자에게 암호화한 비밀 제보서를 보내요.</p>
-  <form id="f" autocomplete="off"><div class="grid3"><label for="c">반<input id="c" inputmode="numeric" maxlength="2" placeholder="2" required></label><label for="n">번호<input id="n" inputmode="numeric" maxlength="2" placeholder="7" required></label><label for="t">조<input id="t" inputmode="numeric" maxlength="2" placeholder="3" required></label></div>
+  <form id="f" autocomplete="off"><div class="grid3"><label for="c">반<input id="c" inputmode="numeric" maxlength="2" placeholder="2" required></label><label for="n">번호<input id="n" inputmode="numeric" maxlength="2" placeholder="7" required></label><label for="t">조<input id="t" inputmode="numeric" maxlength="2" placeholder="3" required></label></div><label class="namerow" for="nm" style="display:block">이름<input id="nm" maxlength="12" placeholder="홍길동" required autocomplete="off"></label>
   <div class="actions"><button class="btn primary" type="submit">미션 시작</button><span class="msg err" id="e"></span></div></form>
   <p class="credit">made by. 나수진쌤 &amp; 전소현쌤 · 교사용 화면은 <a href="teacher.html" style="color:var(--brass)">teacher.html</a></p></section>`;
-  if (me) { $('#c').value = me.cls; $('#n').value = me.no; $('#t').value = me.team }
-  $('#f').onsubmit = e => { e.preventDefault(); const c = num($('#c').value), n = num($('#n').value), t = num($('#t').value); if (!c || !n || !t) { $('#e').textContent = '반, 번호, 조를 모두 숫자로 입력하세요.'; return } me = { cls: c, no: n, team: t }; put('me', me); api('student', me).catch(() => { }); location.hash = 'a1' };
+  if (me) { $('#c').value = me.cls; $('#n').value = me.no; $('#t').value = me.team; $('#nm').value = me.name || '' }
+  $('#f').onsubmit = e => { e.preventDefault(); const c = num($('#c').value), n = num($('#n').value), t = num($('#t').value), nm = $('#nm').value.trim(); if (!c || !n || !t) { $('#e').textContent = '반, 번호, 조를 모두 숫자로 입력하세요.'; return } if (!nm) { $('#e').textContent = '이름을 입력하세요.'; return } me = { cls: c, no: n, team: t, name: nm }; put('me', me); if (isDemo()) demoReset(); else api('student', me).catch(() => { }); location.hash = 'a1'; route() };
 }
 /* ---------- 활동 1 ---------- */
 function act1() {
@@ -226,6 +241,7 @@ function act1() {
   const np = newspaper({ pick: true }); $('#np').appendChild(np);
   const paint = () => { np.querySelectorAll('.s').forEach(s => { s.classList.remove('pink', 'yellow', 'blue'); const m = marks[s.dataset.id]; if (m) s.classList.add(m) }); const c = { pink: 0, yellow: 0, blue: 0 }; Object.values(marks).forEach(m => c[m]++); $('#cnt').textContent = `분홍 ${c.pink} · 노랑 ${c.yellow} · 하늘 ${c.blue}` };
   paint();
+  demoFill = () => { Object.keys(marks).forEach(k => delete marks[k]); Object.entries(D.pens).forEach(([k, p]) => p.need.forEach(id => marks[id] = k)); np.querySelectorAll('.s').forEach(x => x.classList.remove('r-ok', 'r-miss', 'r-bad')); paint(); put('a1_' + meKey(), { ...(get('a1_' + meKey(), {}) || {}), marks }); $('#sub').scrollIntoView({ behavior: 'smooth', block: 'center' }) };
   $('#pens').querySelectorAll('.pen').forEach(b => b.onclick = () => { pen = b.dataset.pen; $('#pens').querySelectorAll('.pen').forEach(x => x.setAttribute('aria-pressed', String(x === b))) });
   const tap = s => { const id = s.dataset.id; if (!pen || marks[id] === pen) delete marks[id]; else marks[id] = pen; np.querySelectorAll('.s').forEach(x => x.classList.remove('r-ok', 'r-miss', 'r-bad')); paint(); put('a1_' + meKey(), { ...(get('a1_' + meKey(), {}) || {}), marks }) };
   np.querySelectorAll('.s').forEach(s => { s.onclick = () => tap(s); s.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(s) } } });
@@ -255,6 +271,7 @@ function act2() {
     $('#tf').querySelectorAll('.why button').forEach(b => b.onclick = () => flash(b.dataset.id)) };
   render(!!saved?.done);
   if (saved?.done) { $('#sub').textContent = '다시 풀기'; $('#m').textContent = `점수 ${saved.score} / 6` }
+  demoFill = () => { if ($('#sub').textContent === '다시 풀기') $('#sub').click(); D.tf.forEach(([q, a], i) => ans[i] = a); render(false) };
   $('#sub').onclick = () => {
     if ($('#sub').textContent === '다시 풀기') { Object.keys(ans).forEach(k => delete ans[k]); render(false); $('#sub').textContent = '제출하고 채점하기'; $('#m').textContent = ''; return }
     if (Object.keys(ans).length < 6) { $('#m').className = 'msg err'; $('#m').textContent = '6문제를 모두 고르세요.'; return }
@@ -293,6 +310,7 @@ function act3() {
   $('#np3').appendChild(newspaper());
   $('#core').querySelectorAll('input').forEach(c => c.onchange = () => { st.core[c.dataset.i] = c.checked; keep() });
   draw(!!saved?.done);
+  demoFill = () => { if ($('#sub').textContent === '다시 풀기') $('#sub').click(); D.fix.forEach((f, i) => { st.picks[i] = f.card[0]; st.words[i] = f.ans[0] }); D.core.forEach(([t, a], i) => st.core[i] = a); $('#core').querySelectorAll('input').forEach(c => c.checked = !!st.core[c.dataset.i]); keep(); draw(false) };
   if (saved?.done) { $('#sub').textContent = '다시 풀기'; $('#m').textContent = `점수 ${saved.score} / ${saved.total}` }
   $('#sub').onclick = () => {
     if ($('#sub').textContent === '다시 풀기') { st.picks = {}; st.words = {}; st.core = {}; $('#core').querySelectorAll('input').forEach(c => { c.checked = false; c.disabled = false }); $('#coreWhy').textContent = ''; draw(false); $('#sub').textContent = '제출하고 채점하기'; $('#m').textContent = ''; $('#res').innerHTML = ''; return }
@@ -319,6 +337,9 @@ function act4() {
   const load = async () => { try { const d = await api('group?cls=' + me.cls + '&team=' + me.team); G = { ...d, ...dirty }; render() } catch (e) { $('#g').innerHTML = '<p class="msg err">서버에 연결하지 못했어요. 잠시 뒤 다시 시도해요.</p>' } };
   api('group', { cls: me.cls, team: me.team, member: me.no, patch: {} }).catch(() => { });
   load(); stopPoll(); poll = setInterval(load, 2000);
+  demoFill = () => { const g = $('#g'); if (!g || !g.querySelector('.dossier')) return; const fa = g.querySelector('textarea.final');
+    if (fa) { fa.value = D.demoTip.map(([k, v]) => k === 'codename' ? '' : v).filter(Boolean).join(' '); fa.oninput(); return }
+    const patch = {}; D.demoTip.forEach(([k, v]) => { const inp = g.querySelector(`[data-k="${k}"]`); if (inp) { inp.value = v; patch[k] = v } }); send(patch).then(render) };
 }
 const dirty = {};
 function send(patch, extra = {}) { G = { ...G, ...patch }; return api('group', { cls: me.cls, team: me.team, patch, ...extra }).then(d => { for (const k in patch) if (dirty[k] === patch[k]) delete dirty[k]; G = { ...d, ...dirty }; return d }).catch(() => { }) }
@@ -380,7 +401,7 @@ function finale(play) {
   let k = 0; const chars = '0123456789ABCDEF#@$%&*<>/\\|'; const scr = $('#scr');
   const it = setInterval(() => { k++; scr.textContent = txt.split('').map((c, i) => i < k * 3 ? chars[(i * 7 + k) % chars.length] : c).join(''); if (k * 3 > txt.length + 20) clearInterval(it) }, 40);
   const vd = $('#vd'); let started = false;
-  const go = () => { if (started) return; started = true; clearInterval(it); scr.hidden = true; vd.hidden = false; $('#vcap').hidden = false; vd.ontimeupdate = () => { if (vd.duration && vd.currentTime > vd.duration / 2) $('#vcap').textContent = '📨 외신 사무실 · 제보서 수신 완료' }; vd.play().catch(() => { vd.muted = true; vd.play().catch(after) }) };
+  const go = () => { if (started || !vd.isConnected) return; started = true; clearInterval(it); scr.hidden = true; vd.hidden = false; $('#vcap').hidden = false; vd.ontimeupdate = () => { if (vd.duration && vd.currentTime > vd.duration / 2) $('#vcap').textContent = '📨 외신 사무실 · 제보서 수신 완료' }; vd.play().catch(() => { vd.muted = true; vd.play().catch(after) }) };
   if (D.video && !D.video.startsWith('__')) { vd.src = D.video; vd.onended = after; vd.onerror = () => setTimeout(after, 1500); setTimeout(go, 1600) } else setTimeout(after, 3800);
   $('#sk').onclick = () => { clearInterval(it); vd.pause(); after() };
 }
@@ -438,7 +459,7 @@ function telex() {
 })();
 /* ---------- router ---------- */
 function route() {
-  stopPoll(); $('#ovRoot').innerHTML = '';
+  stopPoll(); $('#ovRoot').innerHTML = ''; demoFill = null;
   const h = location.hash.slice(1);
   if (!me) { entry(); return }
   if (h === 'a2') act2(); else if (h === 'a3') act3(); else if (h === 'a4') act4(); else act1();
