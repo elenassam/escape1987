@@ -869,7 +869,7 @@ const imgEls = {};
 const ready = Promise.all(Object.entries(IMGS).map(([k, src]) => new Promise(res => { const im = new Image(); im.onload = () => res(); im.onerror = () => res(); im.src = src; imgEls[k] = im })));
 function roomIds(i = S.room) { return Object.keys(ROOMS[i].spots).sort() }
 function nextId() { return roomIds().find(id => !S.solved[id]) }
-function spotState(id) { if (id === 'door') return nextId() ? 'locked' : 'door'; if (S.solved[id]) return 'done'; return id === nextId() ? 'next' : 'locked' }
+function spotState(id) { if (id === 'door') return nextId() && !DEMO ? 'locked' : 'door'; if (S.solved[id]) return 'done'; return id === nextId() ? 'next' : 'locked' }
 let worldReady = false;
 ready.then(() => {
   World.init($('#cv'), imgEls); World.setStateFn(spotState); World.setNavHot(to => viewOf(target()) === to && World.view() !== to); World.onNav(to => goView(to));
@@ -984,7 +984,7 @@ function roomClear() {
   const w = el('div', 'clearbox'); w.innerHTML = `<div class="chip">SPACE ${S.room + 1} CLEAR</div><div class="big">${rm.key}</div><h2>열쇠 글자 ‘${rm.key}’ 획득</h2><p>${rm.clear}</p><p style="color:var(--muted)">얻은 것: ${rm.reward}</p><button class="btn primary" id="bGo">${S.room === 4 ? '금고 문으로' : '문으로 간다'}</button>`;
   overlay(w, closeModal, true); $('#bGo').onclick = () => { closeModal(); goView(viewOf('door'), () => World.faceSpot('door')) };
 }
-function clickDoor() { if (nextId()) { toast(`문이 잠겨 있다. 아직 풀지 않은 단서가 ${roomIds().filter(i => !S.solved[i]).length}개 있다.`); return } if (S.room === 4) { keypad(); return } go(S.room + 1) }
+function clickDoor() { if (DEMO && nextId()) { if (!S.cleared.includes(S.room)) S.cleared.push(S.room); toast('교사 시연 모드: 다음 공간으로 바로 이동해요.'); if (S.room === 4) { keypad(); return } go(S.room + 1); return } if (nextId()) { toast(`문이 잠겨 있다. 아직 풀지 않은 단서가 ${roomIds().filter(i => !S.solved[i]).length}개 있다.`); return } if (S.room === 4) { keypad(); return } go(S.room + 1) }
 function fadeCard(i, cb) { const rm = ROOMS[i]; const f = $('#fade'); f.style.backgroundImage = `url(${IMGS[rm.img]})`; $('#fN').textContent = `SPACE ${i + 1} / 5`; $('#fT').textContent = rm.name; $('#fS').textContent = rm.sub; f.style.opacity = 1; World.setEnabled(false); setTimeout(cb, 800); setTimeout(() => { f.style.opacity = 0; setPlay(true) }, 2400) }
 function go(i) { fadeCard(i, () => { S.room = i; S.view = 0; save(); enterRoom() }) }
 function enterRoom() { const rm = ROOMS[S.room]; World.build(S.room, S.view || 0); $('#hEye').textContent = `SPACE ${S.room + 1} / 5`; $('#hName').textContent = rm.name; $('#hSub').textContent = rm.sub; refreshHud() }
