@@ -152,6 +152,7 @@ textarea.tw{width:100%;min-height:62px;background:#fffbf0;border:1px solid #2b21
 .status{display:inline-flex;align-items:center;gap:8px;font:700 13px var(--f-kr);padding:4px 12px;border-radius:20px;background:#ffffff14}
 .status.review{background:#c9a86a33;color:var(--brass)}.status.feedback{background:#5f9e6a33;color:#9fd6a8}.status.final{background:#b5402f33;color:#f0a493}
 .fb{background:#fff7e0;color:#3a2a10;border-left:5px solid var(--brass);padding:14px 16px;border-radius:4px;margin:16px 0}
+.fb>b{display:block;margin-bottom:6px}#fbt>span{display:block;line-height:1.7}#fbt .fh{font-weight:800;margin-top:6px}#fbt .fh:first-child{margin-top:0}#fbt .fp{color:#225c43;padding-left:10px}#fbt .fm{color:#a3261c;padding-left:10px}#fbt .fx{margin-top:6px}
 .fb b{display:block;font-size:13px;color:#8a6a2e;margin-bottom:4px}
 textarea.final{width:100%;min-height:200px;background:#fffdf6;color:#1d2f5c;border:1px solid #2b211244;border-radius:3px;padding:14px;font:18px/1.7 var(--f-type)}
 .wc{font:700 14px var(--f-kr)}.wc.over{color:var(--bad)}
@@ -377,7 +378,7 @@ function render() {
       $('#mk').onclick = () => { ta.value = D.tip.map(t => (G[t.k] || '').trim()).filter(Boolean).join(' '); wc(); send({ final: ta.value }) };
       $('#go').onclick = () => { const n = words(ta.value); if (n < 20) { $('#gm').className = 'msg err'; $('#gm').textContent = '완성본을 먼저 써요 (20단어 이상).'; return } if (n > 70) { $('#gm').className = 'msg err'; $('#gm').textContent = `70단어를 넘었어요 (${n}단어). 줄여 주세요.`; return } if (!(G.codename || '').trim()) { $('#gm').className = 'msg err'; $('#gm').textContent = 'CODE NAME을 먼저 정하세요.'; return } send({ final: ta.value }, { status: 'final' }).then(() => { stopPoll(); $('#g').dataset.final = '1'; finale(true) }) };
     }
-    $('#fbt').textContent = G.t_feedback || '';
+    $('#fbt').innerHTML = String(G.t_feedback || '').split('\n').filter(x => x.trim()).map(x => /^\d\.\s/.test(x) ? `<span class="fh">${esc(x)}</span>` : /^\+/.test(x) ? `<span class="fp">${esc(x)}</span>` : /^-/.test(x) ? `<span class="fm">${esc(x)}</span>` : `<span class="fx">${esc(x)}</span>`).join('');
     const ta = after.querySelector('textarea'); if (focusKey !== 'final' && !('final' in dirty) && document.activeElement !== ta && (G.final || '') !== ta.value) ta.value = G.final || '';
     const box = ta.closest('.fld'); let tag = box.querySelector('.who'); const ws = whoOn('final'); if (ws.length) { if (!tag) { tag = el('span', 'who'); box.appendChild(tag) } tag.textContent = ws.join('·') + ' 작성 중' } else if (tag) tag.remove();
     wc();

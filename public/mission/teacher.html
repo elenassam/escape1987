@@ -42,8 +42,8 @@ td{padding:8px 10px;border-bottom:1px solid #ffffff0f}
 .g .st{position:absolute;top:12px;right:12px;font:700 12px var(--f);padding:3px 10px;border-radius:20px;background:#2b211214}
 .g .st.review{background:#e0b04a;color:#2b2112}.g .st.feedback{background:#2f7a5a;color:#fff}.g .st.final{background:#a3261c;color:#fff}
 .g dl{display:grid;grid-template-columns:110px 1fr;gap:3px 10px;margin:0;font-size:13px}.g dt{color:#6b5a3a;font:12px var(--ft)}.g dd{margin:0;font:15px var(--ft);color:#1d2f5c;word-break:break-word}.g dd.e{color:#a08a60}
-.g textarea{width:100%;min-height:84px;margin-top:10px;background:#fffdf6;border:1px solid #2b211244;border-radius:3px;padding:8px 10px;color:#2b2112;font:14px/1.6 var(--f)}
-.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.chips button{background:#2b21120f;border:1px solid #2b211233;color:#2b2112;border-radius:14px;padding:2px 9px;font-size:12px}
+.g textarea{width:100%;min-height:150px;margin-top:10px;background:#fffdf6;border:1px solid #2b211244;border-radius:3px;padding:8px 10px;color:#2b2112;font:14px/1.6 var(--f)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.fbk{margin-top:6px}.fbrow{display:flex;gap:8px;align-items:flex-start;margin-top:5px}.fbl{flex:0 0 74px;font:700 11px var(--f);color:#6b5a3a;padding-top:5px}.fbrow .chips{margin-top:0}.fbrow.pos .chips button{border-color:#2f7a5a66;color:#225c43;background:#2f7a5a12}.fbrow.neg .chips button{border-color:#a3261c55;color:#8a2219;background:#a3261c0d}.chips button{background:#2b21120f;border:1px solid #2b211233;color:#2b2112;border-radius:14px;padding:2px 9px;font-size:12px}
 .g .row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}.g .btn{background:#2b2112;color:#efe6cf;border-color:#2b2112}.g .sent{font-size:12px;color:#2f7a5a}
 .g .final{background:#fffdf6;border:1px dashed #2b211255;padding:10px;margin-top:10px;font:15px/1.6 var(--ft);color:#1d2f5c}
 .gate{max-width:380px;margin:12vh auto;text-align:center}.gate input{width:100%;padding:12px;font:600 22px var(--fm);text-align:center;background:#0b100f;border:1px solid var(--brass);border-radius:4px;margin:14px 0}
@@ -70,6 +70,31 @@ td{padding:8px 10px;border-bottom:1px solid #ffffff0f}
 (() => {
 const D = window.M87, $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/* 피드백 틀: 1. 구성 / 2. 언어 사용, 잘한 점 + / 고칠 점 - */
+const FB_HEAD = ['', '1. 구성', '2. 언어 사용'];
+const FB_TPL = '1. 구성\n+ \n- \n2. 언어 사용\n+ \n- ';
+const FB_SETS = [
+  [1, '+', '구성 +', ['다섯 칸(사건·주장·진실·증거·요청)을 모두 채웠어요.', '주장과 진실을 But/However로 잘 나눴어요.', '증거를 2개 이상 정확하게 썼어요.', '날짜·장소를 기사에서 정확히 찾아 썼어요.', '부탁(Please)으로 분명하게 마무리했어요.']],
+  [1, '-', '구성 −', ['① 날짜와 장소를 기사에서 찾아 넣으세요.', '② 경찰이 주장한 내용과 그 뒤에 한 일을 쓰세요.', '③을 But이나 However로 시작해 주장과 진실을 나누세요.', '④ 몸에 남은 증거를 2개 이상 쓰세요. (활동 3 참고)', '⑤ because 뒤에 세상이 알아야 하는 이유를 쓰세요.']],
+  [2, '+', '언어 사용 +', ['과거시제(died, said)를 정확하게 썼어요.', 'died of + 원인을 바르게 썼어요.', 'claimed / according to로 경찰의 말을 잘 전했어요.', '문장이 짧고 분명해요.']],
+  [2, '-', '언어 사용 −', ['지난 일은 과거시제(died, said)로 써요.', 'died of 다음에는 사망 원인을 쓰세요.', '주어와 동사가 있는 완전한 문장으로 써요.', '문장 첫 글자는 대문자, 끝에는 마침표를 찍어요.', '철자를 단어장에서 확인해 보세요.']],
+];
+const FB_END = ['이제 완성본으로 옮겨 쓰고 전송하세요.', '고친 뒤 다시 검토 요청하세요.'];
+function fbAdd(val, sec, sign, text) {
+  let L = (val || '').replace(/\s+$/, '').split('\n'); if (!L[0] && L.length === 1) L = [];
+  if (!sec) { L.push(text); return L.join('\n') }
+  if (!L.includes(FB_HEAD[1]) || !L.includes(FB_HEAD[2])) L = FB_TPL.split('\n').concat(L.filter(x => x.trim()));
+  const h = L.indexOf(FB_HEAD[sec]); let end = L.findIndex((x, i) => i > h && (/^\d\.\s/.test(x) || (x.trim() && !/^[+-]/.test(x)))); if (end < 0) end = L.length;
+  const empty = L.findIndex((x, i) => i > h && i < end && x.trim() === sign);
+  if (empty >= 0) { L[empty] = sign + ' ' + text; return L.join('\n') }
+  let at = -1; for (let i = h + 1; i < end; i++) if (L[i].startsWith(sign)) at = i;
+  if (at < 0) at = sign === '+' ? h : end - 1;
+  L.splice(at + 1, 0, sign + ' ' + text); return L.join('\n');
+}
+function fbClean(v) { // 빈 + / - 줄과 내용 없는 제목 지우기
+  const L = String(v || '').split('\n').map(x => x.replace(/\s+$/, '')).filter(x => !/^[+-]$/.test(x.trim()));
+  return L.filter((x, i) => !(/^\d\.\s/.test(x) && (i + 1 >= L.length || /^\d\.\s/.test(L[i + 1]) || !L[i + 1].trim()))).join('\n').trim();
+}
 let PW = sessionStorage.getItem('m87pw') || '', DATA = { students: [], groups: [] }, tab = '', sortKey = 'no', drafts = {}, sentAt = {};
 const H = () => ({ 'x-teacher-pw': PW, 'content-type': 'application/json' });
 async function fetchAll() { const r = await fetch('/api/m/all', { headers: H(), cache: 'no-store' }); if (r.status === 401) throw 401; if (!r.ok) throw r.status; return r.json() }
@@ -100,15 +125,15 @@ function drawGroups(G, S = []) {
     <h3>${g.team}조 · ${esc(g.codename || '(CODE NAME 없음)')}</h3><div class="meta">조원 ${mem.length ? mem.map(who).join(', ') : '-'} · 표 ${filled}/${keys.length}칸${g.reviewAt ? ' · 검토 요청 ' + new Date(g.reviewAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
     <dl>${D.tip.map(t => `<dt>${t.h}</dt><dd class="${g[t.k] ? '' : 'e'}">${g[t.k] ? esc(g[t.k]) : '(아직 안 씀)'}</dd>`).join('')}</dl>
     ${st === 'final' ? `<div class="final"><b style="font:700 11px var(--f);color:#a3261c">전송한 완성본 · ${wc}단어</b><br>${esc(g.final)}</div>` : g.final ? `<div class="final" style="opacity:.75"><b style="font:700 11px var(--f);color:#6b5a3a">작성 중인 완성본 · ${wc}단어</b><br>${esc(g.final)}</div>` : ''}
-    ${st !== 'final' ? `<textarea data-g="${id}" placeholder="이 조에 보낼 피드백을 쓰세요">${esc(drafts[id] ?? g.t_feedback ?? '')}</textarea>
-    <div class="chips">${['증거 2개가 정확해요. 좋아요!', 'said와 But으로 주장과 진실을 잘 나눴어요.', '④에 몸에 남은 증거를 2개 쓰세요. (활동 3 참고)', '③을 But이나 However로 시작해 주장과 진실을 나누세요.', 'died of 다음에는 사망 원인을 쓰세요.', '지난 일은 과거시제(died, said)로 써요.', 'This matters because 뒤에 이유를 문장으로 써요.', '이제 완성본으로 옮겨 쓰고 전송하세요.'].map(c => `<button data-add="${id}">${c}</button>`).join('')}</div>
+    ${st !== 'final' ? `<textarea data-g="${id}" placeholder="이 조에 보낼 피드백을 쓰세요">${esc(drafts[id] ?? g.t_feedback ?? FB_TPL)}</textarea>
+    <div class="fbk">${FB_SETS.map(([sec, sign, lab, list]) => `<div class="fbrow ${sign === '+' ? 'pos' : 'neg'}"><span class="fbl">${lab}</span><div class="chips">${list.map(c => `<button data-add="${id}" data-sec="${sec}" data-sign="${sign}">${sign} ${c}</button>`).join('')}</div></div>`).join('')}<div class="fbrow"><span class="fbl">마무리</span><div class="chips">${FB_END.map(c => `<button data-add="${id}" data-sec="0" data-sign="">${c}</button>`).join('')}</div></div></div>
     <div class="row"><button class="btn" data-send="${id}">피드백 보내기</button><span class="sent">${g.t_fbAt ? '보낸 시각 ' + new Date(g.t_fbAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}</span></div>` : `<p class="note" style="color:#6b5a3a;margin:8px 0 0">보낸 피드백: ${esc(g.t_feedback || '-')}</p>`}</article>` }).join('');
   if (active) { // keep the textarea being typed in
     const keepVal = drafts[active]; host.innerHTML = html; const ta = host.querySelector(`textarea[data-g="${active}"]`); if (ta) { ta.value = keepVal ?? ta.value; ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length }
   } else host.innerHTML = html;
   host.querySelectorAll('textarea').forEach(t => t.oninput = () => drafts[t.dataset.g] = t.value);
-  host.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { const id = b.dataset.add, t = host.querySelector(`textarea[data-g="${id}"]`); t.value = (t.value ? t.value.trim() + '\n' : '') + b.textContent; drafts[id] = t.value; t.focus() });
-  host.querySelectorAll('[data-send]').forEach(b => b.onclick = async () => { const id = b.dataset.send, [cls, team] = id.split('_'), t = host.querySelector(`textarea[data-g="${id}"]`); if (!t.value.trim()) { t.focus(); return } b.disabled = true; await fetch('/api/m/feedback', { method: 'POST', headers: H(), body: JSON.stringify({ cls, team, feedback: t.value }) }); delete drafts[id]; DATA = await fetchAll(); draw() });
+  host.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { const id = b.dataset.add, t = host.querySelector(`textarea[data-g="${id}"]`); t.value = fbAdd(t.value, +b.dataset.sec, b.dataset.sign, b.textContent.replace(/^[+-] /, '')); drafts[id] = t.value; t.focus() });
+  host.querySelectorAll('[data-send]').forEach(b => b.onclick = async () => { const id = b.dataset.send, [cls, team] = id.split('_'), t = host.querySelector(`textarea[data-g="${id}"]`); if (!fbClean(t.value)) { t.focus(); return } b.disabled = true; await fetch('/api/m/feedback', { method: 'POST', headers: H(), body: JSON.stringify({ cls, team, feedback: fbClean(t.value) }) }); delete drafts[id]; DATA = await fetchAll(); draw() });
 }
 const COLS = [['no', '번호'], ['name', '이름'], ['team', '조'], ['a1', '활동 1 형광펜'], ['a2', '활동 2 T/F'], ['a3', '활동 3 증거'], ['up', '마지막 활동']];
 function cellScore(a, tot) { if (!a) return '<span class="pill none">미제출</span>'; const r = a.score / (a.total || tot); return `<span class="pill ${r >= .8 ? 'ok' : r >= .5 ? 'mid' : 'low'}">${a.score}/${a.total || tot}</span><span class="bar"><i style="width:${Math.round(r * 100)}%"></i></span>${a.tries > 1 ? ` <span class="note">${a.tries}회</span>` : ''}` }
