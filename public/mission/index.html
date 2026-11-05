@@ -189,16 +189,10 @@ let me = get('me', null);
 const meKey = () => me.cls + '_' + me.no;
 /* ---------- 교사 시연 모드: 0반 0번 0조 수소티 ---------- */
 const isDemo = () => !!me && me.cls === '0' && me.no === '0' && me.team === '0' && me.name === '수소티';
-let demoG = {}, demoFill = null;
-function demoReset() { demoG = {}; Object.keys(localStorage).filter(k => k.startsWith('m87_') && /_0_0$/.test(k)).forEach(k => { try { localStorage.removeItem(k) } catch (e) { } }); ['a1_0_0', 'a2_0_0', 'a3_0_0', 'a4done_0_0'].forEach(k => put(k, null)) }
-function demoApi(path, body) {
-  if (path.startsWith('group')) {
-    if (body) { const p = body.patch || {}; Object.assign(demoG, p, { cls: '0', team: '0', updated: Date.now() }); if (body.status === 'review') { demoG.status = 'review'; setTimeout(() => { if (demoG.status === 'review') { demoG.status = 'feedback'; demoG.t_feedback = '[시연] 날짜·장소·원인이 분명하고, 증거가 두 가지 잘 들어갔어요. 완성본으로 옮겨 써 보세요.' } }, 1800) } if (body.status === 'final') demoG.status = 'final' }
-    return Promise.resolve({ ...demoG })
-  }
-  return Promise.resolve({ ok: true })
-}
-async function api(path, body) { if (isDemo()) return demoApi(path, body); const r = await fetch('/api/m/' + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : { cache: 'no-store' }); if (!r.ok) throw new Error(r.status); return r.json() }
+let demoFill = null;
+// 시연 기록도 실제 서버(0반)에 저장 → 교사 화면에서 확인·피드백 시연 가능. 시연 로그인 때마다 0반 기록을 새로 비움
+function demoReset() { Object.keys(localStorage).filter(k => k.startsWith('m87_') && /_0_0$/.test(k)).forEach(k => { try { localStorage.removeItem(k) } catch (e) { } }); ['a1_0_0', 'a2_0_0', 'a3_0_0', 'a4done_0_0'].forEach(k => put(k, null)); return fetch('/api/m/demoreset', { method: 'POST' }).catch(() => { }) }
+async function api(path, body) { const r = await fetch('/api/m/' + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : { cache: 'no-store' }); if (!r.ok) throw new Error(r.status); return r.json() }
 function saveAct(act, data) { put(act + '_' + meKey(), data); api('student', { ...me, act: 'act' + act.slice(1), data }).catch(() => { }) }
 const STEPS = [['a1', '1', '형광펜으로 읽기'], ['a2', '2', 'T/F 확인'], ['a3', '3', '증거로 바로잡기'], ['a4', '4', '비밀 제보서 (조별)']];
 function alertMsg() { const m = document.querySelector('.msg'); if (m) m.textContent = '이 화면에는 채울 답이 없어요.' }
@@ -229,7 +223,7 @@ function entry() {
   <div class="actions"><button class="btn primary" type="submit">미션 시작</button><span class="msg err" id="e"></span></div></form>
   <p class="credit">made by. 나수진쌤 &amp; 전소현쌤 · 교사용 화면은 <a href="teacher.html" style="color:var(--brass)">teacher.html</a></p></section>`;
   if (me) { $('#c').value = me.cls; $('#n').value = me.no; $('#t').value = me.team; $('#nm').value = me.name || '' }
-  $('#f').onsubmit = e => { e.preventDefault(); const c = num($('#c').value), n = num($('#n').value), t = num($('#t').value), nm = $('#nm').value.trim(); if (!c || !n || !t) { $('#e').textContent = '반, 번호, 조를 모두 숫자로 입력하세요.'; return } if (!nm) { $('#e').textContent = '이름을 입력하세요.'; return } me = { cls: c, no: n, team: t, name: nm }; put('me', me); if (isDemo()) demoReset(); else api('student', me).catch(() => { }); location.hash = 'a1'; route() };
+  $('#f').onsubmit = e => { e.preventDefault(); const c = num($('#c').value), n = num($('#n').value), t = num($('#t').value), nm = $('#nm').value.trim(); if (!c || !n || !t) { $('#e').textContent = '반, 번호, 조를 모두 숫자로 입력하세요.'; return } if (!nm) { $('#e').textContent = '이름을 입력하세요.'; return } me = { cls: c, no: n, team: t, name: nm }; put('me', me); (isDemo() ? demoReset() : Promise.resolve()).then(() => api('student', me)).catch(() => { }); location.hash = 'a1'; route() };
 }
 /* ---------- 활동 1 ---------- */
 function act1() {
