@@ -38,6 +38,15 @@ td{padding:8px 10px;border-bottom:1px solid #ffffff0f}
 @media (max-width:440px){.groups{grid-template-columns:1fr}}
 .g{background:#e8dcc0;color:#2b2112;border-radius:4px;padding:14px 16px;position:relative;border:3px solid transparent}
 .g.review{border-color:var(--warn);box-shadow:0 0 0 3px #e0b04a33}.g.final{opacity:.92}
+.g.wide{grid-column:1/-1;display:grid;grid-template-columns:minmax(320px,44%) 1fr;gap:16px;align-items:stretch}
+.g .gmain{position:relative;min-width:0}
+.fbside{position:relative;min-height:460px;border-right:1px solid #2b211222;padding-right:12px}
+.fbscroll{position:absolute;inset:0;overflow:auto;padding-right:4px}
+.fbtitle{font:800 13px var(--f);color:#2b2112;margin-bottom:2px}.fbtitle small{font-weight:400;font-size:11px;color:#8a7a5a;margin-left:6px}
+.fbside .fbbox{margin-top:6px}.fbside .fbrow{margin-top:4px}.fbside .fbl{flex-basis:56px;font-size:10.5px}
+.fbside .chips{gap:4px}.fbside .chips button{font-size:11.5px;line-height:1.35;padding:2px 8px;border-radius:10px}
+.g.wide textarea{min-height:280px}
+@media (max-width:900px){.g.wide{grid-template-columns:1fr}.fbside{min-height:0;border-right:0;padding-right:0;order:2}.fbscroll{position:static;max-height:360px}}
 .g h3{margin:0;font:400 20px var(--ft)}.g .meta{font-size:12px;color:#6b5a3a;margin:2px 0 8px}
 .g .st{position:absolute;top:12px;right:12px;font:700 12px var(--f);padding:3px 10px;border-radius:20px;background:#2b211214}
 .g .st.review{background:#e0b04a;color:#2b2112}.g .st.feedback{background:#2f7a5a;color:#fff}.g .st.final{background:#a3261c;color:#fff}
@@ -85,13 +94,13 @@ const FB_SETS = [
     '① 날짜가 빠졌어요. 기사 1문단 첫 문장에서 학생이 숨진 날짜를 찾아 On January 14, 1987, 처럼 쓰세요. (1월 16일은 기사가 나온 날이에요)',
     '① 장소가 빠졌어요. 어디에서 숨졌는지 at a police office in Seoul 을 넣으세요.',
     '② 경찰이 무엇이라고 주장했는지 The police claimed (that) he died of shock. 처럼 쓰세요.',
-    '② 경찰이 그 뒤에 한 일도 쓰세요. 예) They closed the case a few days later.',
-    '③ But이나 However로 시작해야 경찰의 주장과 진실이 나뉘어 보여요. 예) However, he died of asphyxia.',
+    '② 경찰이 그 뒤에 한 일도 쓰세요.',
+    '③ But이나 However로 시작해야 경찰의 주장과 진실이 나뉘어 보여요.',
     '③ 진짜 사망 원인이 빠졌어요. died of 뒤에 asphyxia(질식)를 쓰세요.',
-    '④ 증거가 1개뿐이에요. 단서 수첩·활동 3을 보고 하나 더 쓰세요. 예) There were bruises on his neck and chest. / The doctor heard water in the lungs.',
+    '④ 증거가 1개뿐이에요. 단서 수첩·활동 3을 보고 하나 더 쓰세요.',
     '④ “이상하다”는 느낌이 아니라 기록(부검 결과, 의사의 관찰)에서 나온 증거를 쓰세요.',
-    '⑤ 왜 세상이 알아야 하는지 because 뒤에 이유를 문장으로 쓰세요. 예) because the truth is hidden.',
-    '⑤ 기자에게 무엇을 해 달라는지 Please로 부탁하세요. 예) Please tell the world the truth.']],
+    '⑤ 왜 세상이 알아야 하는지 because 뒤에 이유를 문장으로 쓰세요.',
+    '⑤ 기자에게 무엇을 해 달라는지 Please로 부탁하세요.']],
   [2, '+', '언어 사용 +', [
     '지난 일을 과거시제(died, claimed, closed, heard)로 정확하게 썼어요.',
     'die of + 원인(died of asphyxia) 표현을 바르게 썼어요.',
@@ -102,11 +111,11 @@ const FB_SETS = [
   [2, '-', '언어 사용 −', [
     '지난 일은 과거시제로 써요. die → died, say → said, claim → claimed, close → closed',
     'died of 다음에는 사망 원인(명사)이 와요. died of shock / died of asphyxia (died by, died for X)',
-    '주어와 동사가 있는 완전한 문장으로 써요. 예) Bruises on his neck. (X) → There were bruises on his neck. (O)',
+    '주어와 동사가 있는 완전한 문장으로 써요.',
     '문장 첫 글자는 대문자, 끝에는 마침표(.)를 찍어요.',
-    '철자를 단어장에서 확인하세요. 예) asphyxia, autopsy, bruises, lungs',
+    '철자를 단어장에서 확인하세요.',
     '한글이 섞여 있어요. 모든 칸을 영어로 써 주세요.',
-    '여러 개를 나열할 때는 and로 이어요. 예) on his neck and chest']],
+    '여러 개를 나열할 때는 and로 이어요.']],
 ];
 const FB_END = ['이제 완성본으로 옮겨 쓰고 전송하세요.', '고친 뒤 다시 검토 요청하세요.'];
 function fbAdd(val, sec, sign, text) {
@@ -150,13 +159,12 @@ function drawGroups(G, S = []) {
   const keys = ['codename', ...D.tip.map(t => t.k)];
   const html = G.map(g => { const id = g.cls + '_' + g.team, st = g.status || 'editing'; const mem = Object.keys(g).filter(k => k.startsWith('m_')).map(k => k.slice(2)).sort((a, b) => n(a) - n(b));
     const filled = keys.filter(k => (g[k] || '').trim()).length; const wc = (String(g.final || '').match(/\S+/g) || []).length;
-    return `<article class="g ${st}" data-id="${id}"><span class="st ${st}">${{ editing: '작성 중', review: '검토 요청', feedback: '피드백 보냄', final: '전송 완료' }[st]}</span>
+    return `<article class="g ${st}${st !== 'final' ? ' wide' : ''}" data-id="${id}">${st !== 'final' ? `<aside class="fbside"><div class="fbscroll"><div class="fbtitle">피드백 문구 <small>누르면 오른쪽 칸에 들어가요</small></div><div class="fbk">${[[1, '내용'], [2, '언어 사용']].map(([sec, nm]) => `<div class="fbbox"><div class="fbh">${sec}. ${nm} </div>${FB_SETS.filter(f => f[0] === sec).map(([, sign, , list]) => `<div class="fbrow ${sign === '+' ? 'pos' : 'neg'}"><span class="fbl">${sign === '+' ? '+ 잘한 점' : '− 고칠 점'}</span><div class="chips">${list.map(c => `<button data-add="${id}" data-sec="${sec}" data-sign="${sign}">${c}</button>`).join('')}</div></div>`).join('')}</div>`).join('')}<div class="fbrow"><span class="fbl">마무리</span><div class="chips">${FB_END.map(c => `<button data-add="${id}" data-sec="0" data-sign="">${c}</button>`).join('')}</div></div></div></div></aside>` : ''}<div class="gmain"><span class="st ${st}">${{ editing: '작성 중', review: '검토 요청', feedback: '피드백 보냄', final: '전송 완료' }[st]}</span>
     <h3>${g.team}조 · ${esc(g.codename || '(CODE NAME 없음)')}</h3><div class="meta">조원 ${mem.length ? mem.map(who).join(', ') : '-'} · 표 ${filled}/${keys.length}칸${g.reviewAt ? ' · 검토 요청 ' + new Date(g.reviewAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
     <dl>${D.tip.map(t => `<dt>${t.h}</dt><dd class="${g[t.k] ? '' : 'e'}">${g[t.k] ? esc(g[t.k]) : '(아직 안 씀)'}</dd>`).join('')}</dl>
     ${st === 'final' ? `<div class="final"><b style="font:700 11px var(--f);color:#a3261c">전송한 완성본 · ${wc}단어</b><br>${esc(g.final)}</div>` : g.final ? `<div class="final" style="opacity:.75"><b style="font:700 11px var(--f);color:#6b5a3a">작성 중인 완성본 · ${wc}단어</b><br>${esc(g.final)}</div>` : ''}
     ${st !== 'final' ? `<textarea data-g="${id}" placeholder="이 조에 보낼 피드백을 쓰세요">${esc(drafts[id] ?? g.t_feedback ?? FB_TPL)}</textarea>
-    <div class="fbk">${[[1, '내용'], [2, '언어 사용']].map(([sec, nm]) => `<div class="fbbox"><div class="fbh">${sec}. ${nm} <small>누르면 피드백 칸의 알맞은 자리에 들어가요</small></div>${FB_SETS.filter(f => f[0] === sec).map(([, sign, , list]) => `<div class="fbrow ${sign === '+' ? 'pos' : 'neg'}"><span class="fbl">${sign === '+' ? '+ 잘한 점' : '− 고칠 점'}</span><div class="chips">${list.map(c => `<button data-add="${id}" data-sec="${sec}" data-sign="${sign}">${c}</button>`).join('')}</div></div>`).join('')}</div>`).join('')}<div class="fbrow"><span class="fbl">마무리</span><div class="chips">${FB_END.map(c => `<button data-add="${id}" data-sec="0" data-sign="">${c}</button>`).join('')}</div></div></div>
-    <div class="row"><button class="btn" data-send="${id}">피드백 보내기</button><span class="sent">${g.t_fbAt ? '보낸 시각 ' + new Date(g.t_fbAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}</span></div>` : `<p class="note" style="color:#6b5a3a;margin:8px 0 0">보낸 피드백: ${esc(g.t_feedback || '-')}</p>`}</article>` }).join('');
+    <div class="row"><button class="btn" data-send="${id}">피드백 보내기</button><span class="sent">${g.t_fbAt ? '보낸 시각 ' + new Date(g.t_fbAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}</span></div>` : `<p class="note" style="color:#6b5a3a;margin:8px 0 0">보낸 피드백: ${esc(g.t_feedback || '-')}</p>`}</div></article>` }).join('');
   if (active) { // keep the textarea being typed in
     const keepVal = drafts[active]; host.innerHTML = html; const ta = host.querySelector(`textarea[data-g="${active}"]`); if (ta) { ta.value = keepVal ?? ta.value; ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length }
   } else host.innerHTML = html;
