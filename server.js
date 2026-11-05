@@ -71,6 +71,7 @@ async function mission(req, res, url) {
     if (body.member) patch['m_' + norm(body.member)] = Date.now();
     return send(res, 200, await store.kvMerge(k, patch));
   }
+  if (route === 'demoreset' && req.method === 'POST') return send(res, 200, { deleted: (await store.kvDel('ms:0_')) + (await store.kvDel('mg:0_')) }); // 교사 시연(0반) 기록만 비움
   if (!isTeacher(req)) return send(res, 401, { error: 'password' });
   if (route === 'all') return send(res, 200, { students: await store.kvList('ms:'), groups: await store.kvList('mg:') });
   if (route === 'feedback' && req.method === 'POST') {
