@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>1987 외신 미션</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Special+Elite&family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: dark case-file chrome (top bar + stepper) around light newsprint activity sheets. */
+:root{
+  --ink:#0f1514; --panel:#172120; --fg:#ece6d6; --muted:#9fb0aa; --brass:#c9a86a; --stamp:#b5402f; --good:#5f9e6a; --bad:#c0563f;
+  --paper:#f3eee1; --paper2:#e9e1cc; --news:#1b1b1b; --rule:#2a2a2a;
+  --pink:#ffb3d1; --yellow:#ffe66d; --blue:#a6dcff;
+  --f-head:'Playfair Display','Noto Serif KR',serif; --f-news:'Old Standard TT','Noto Serif KR',Georgia,serif; --f-kr:'Noto Sans KR','Malgun Gothic',sans-serif; --f-krs:'Noto Serif KR',serif; --f-type:'Special Elite','Courier New',monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--ink);color:var(--fg);font:15px/1.65 var(--f-kr)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.top{position:sticky;top:0;z-index:20;background:#0b100fee;backdrop-filter:blur(6px);border-bottom:1px solid #c9a86a33;padding:10px max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left))}
+.top .row{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font:900 18px var(--f-krs);letter-spacing:-.01em}.brand em{font-style:normal;color:var(--brass)}
+.me{margin-left:auto;font-size:13px;color:var(--muted)}.me b{color:var(--fg)}
+.steps{max-width:1080px;margin:8px auto 0;display:flex;gap:6px;overflow-x:auto}
+.steps a{flex:1 0 auto;text-decoration:none;color:var(--muted);border:1px solid #ffffff1c;border-radius:4px;padding:6px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.steps a b{font:700 12px var(--f-kr);color:var(--brass)}
+.steps a.on{background:#c9a86a22;border-color:var(--brass);color:var(--fg)}
+.steps a .ok{color:var(--good);font-weight:700}
+main{max-width:1080px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-right)) 80px max(16px,env(safe-area-inset-left))}
+h1.pg{font:900 clamp(24px,4vw,34px)/1.25 var(--f-krs);margin:0 0 6px;text-wrap:balance}
+.lead{color:var(--muted);margin:0 0 18px}
+.card{background:var(--panel);border:1px solid #c9a86a2e;border-radius:6px;padding:18px 20px}
+.how{background:#1d2a28;border-left:4px solid var(--brass);border-radius:4px;padding:14px 18px;margin:0 0 18px}
+.how h3{margin:0 0 6px;font:700 15px var(--f-kr);color:var(--brass)}
+.how ol,.how ul{margin:0;padding-left:20px}.how li{margin:2px 0}
+.btn{background:#22302e;border:1px solid #ffffff2a;border-radius:4px;padding:10px 18px}
+.btn:hover{border-color:var(--brass)}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:#1a1408;font-weight:700}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px}
+.msg{font-size:14px;color:var(--muted)}.msg.err{color:#f0a493}
+/* entry */
+.entry{max-width:560px;margin:5vh auto 0}
+.entry .eyebrow{font:700 12px var(--f-kr);letter-spacing:.2em;color:var(--brass)}
+.entry h1{font:900 clamp(30px,6vw,46px)/1.15 var(--f-krs);margin:8px 0 10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.grid3 label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.grid3 input{background:#0b100f;border:1px solid var(--brass);border-radius:4px;padding:12px;font-size:18px;text-align:center}
+.credit{font-size:12px;color:#7e8d88;margin-top:24px}
+/* newspaper */
+.paper{background:var(--paper);color:var(--news);border-radius:3px;box-shadow:0 18px 50px #000a;padding:22px clamp(16px,4vw,40px) 28px;position:relative;background-image:radial-gradient(#0000000a 1px,transparent 1px);background-size:3px 3px}
+.mast{text-align:center;border-bottom:3px double var(--rule);padding-bottom:8px}
+.mast .nm{font:900 clamp(28px,5.5vw,52px)/1 var(--f-head);letter-spacing:.01em}
+.mast .tag{font:italic 13px var(--f-news);margin-top:4px}
+.strip{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font:12px var(--f-news);border-bottom:1px solid var(--rule);padding:5px 0;text-transform:uppercase;letter-spacing:.06em}
+.fic{position:absolute;top:12px;right:14px;font:700 11px var(--f-kr);color:var(--stamp);border:1.5px solid var(--stamp);padding:2px 7px;transform:rotate(3deg);background:#f3eee1}
+.head{font:900 clamp(26px,4.6vw,44px)/1.1 var(--f-head);margin:18px 0 8px;text-align:center;text-wrap:balance}
+.deck{text-align:center;font:italic 16px var(--f-news);margin:0 0 14px;color:#333}
+.byline{font:12px var(--f-news);text-transform:uppercase;letter-spacing:.1em;border-top:1px solid #0003;border-bottom:1px solid #0003;padding:5px 0;margin-bottom:14px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.cols{columns:2 300px;column-gap:32px;column-rule:1px solid #0002;font:17px/1.75 var(--f-news);text-align:justify;hyphens:auto}
+.cols p{margin:0 0 12px;break-inside:avoid-column}
+.cols p:first-child::first-letter{float:left;font:900 54px/.85 var(--f-head);padding:4px 6px 0 0}
+.dl{font-weight:700}
+.s{border-radius:3px;padding:1px 1px;transition:background .15s;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.pickable .s{cursor:pointer}
+.pickable .s:hover{outline:1px dashed #0006}
+.s.pink{background:linear-gradient(transparent 12%,var(--pink) 12%,var(--pink) 92%,transparent 92%)}
+.s.yellow{background:linear-gradient(transparent 12%,var(--yellow) 12%,var(--yellow) 92%,transparent 92%)}
+.s.blue{background:linear-gradient(transparent 12%,var(--blue) 12%,var(--blue) 92%,transparent 92%)}
+.s.flash{outline:3px solid var(--stamp);outline-offset:2px}
+.s.r-ok{box-shadow:inset 0 -2px 0 var(--good)}
+.s.r-miss{outline:2px dashed #b07a00;outline-offset:1px}
+.s.r-bad{text-decoration:underline wavy var(--bad) 2px;text-underline-offset:4px}
+.sid{font:700 10px var(--f-kr);vertical-align:super;color:#8a7a5a;margin-left:1px;user-select:none}
+/* pens */
+.pens{position:sticky;top:96px;z-index:5;display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;background:var(--ink);padding:8px 0}
+.pen{flex:1 1 200px;display:flex;gap:10px;align-items:flex-start;text-align:left;background:#1c2725;border:2px solid transparent;border-radius:6px;padding:10px 12px}
+.pen i{flex:none;width:26px;height:26px;border-radius:50%;margin-top:2px;box-shadow:inset 0 0 0 2px #0003}
+.pen b{display:block;font-size:14px}.pen small{display:block;color:var(--muted);font-size:12px;line-height:1.45}
+.pen[aria-pressed=true]{border-color:var(--brass);background:#26332f}
+.pen.eraser{flex:0 0 auto;align-items:center}
+.res{margin-top:18px}
+.res .row{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid #ffffff14}
+.res .row i{width:18px;height:18px;border-radius:50%;margin-top:4px}
+.score{font:900 34px var(--f-krs);color:var(--brass)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:8px}
+/* tf */
+.tf{display:grid;gap:10px}
+.tfq{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--panel);border:1px solid #ffffff14;border-radius:6px;padding:12px 14px}
+.tfq .n{font:700 14px var(--f-kr);color:var(--brass)}
+.tfq .en{font:17px var(--f-news)}
+.tfq .seg{display:flex;gap:6px}
+.tfq .seg button{width:48px;height:40px;border-radius:4px;background:#0f1514;border:1px solid #ffffff2a;font:700 16px var(--f-kr)}
+.tfq .seg button[aria-pressed=true]{background:var(--brass);color:#1a1408;border-color:var(--brass)}
+.tfq.ok{border-color:var(--good)}.tfq.no{border-color:var(--bad)}
+.tfq .why{grid-column:2/4;font-size:13.5px;color:var(--muted)}
+.tfq .why button{background:none;border:0;color:var(--brass);text-decoration:underline;padding:0 4px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.split{grid-template-columns:1fr}.pens{top:110px}}
+.sticky{position:sticky;top:112px}
+/* act3 */
+.fix{background:var(--panel);border:1px solid #ffffff14;border-radius:8px;padding:16px;margin-bottom:14px}
+.fix.ok{border-color:var(--good)}.fix.no{border-color:var(--bad)}
+.claim{background:var(--paper);color:var(--news);font:18px var(--f-news);padding:10px 14px;border-left:5px solid var(--pink);border-radius:3px}
+.claim small{display:block;font:700 11px var(--f-kr);color:#8a3a5a;letter-spacing:.06em}
+.stepl{font:700 13px var(--f-kr);color:var(--brass);margin:14px 0 6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.cardp{text-align:left;background:#ece3cc;color:#2a2620;border:2px solid transparent;border-radius:4px;padding:8px 10px;font-size:12.5px;line-height:1.45}
+.cardp b{display:block;font:700 13px var(--f-krs)}
+.cardp small{font:700 10px var(--f-kr);color:#7a6e58}
+.cardp[aria-pressed=true]{border-color:var(--stamp);box-shadow:0 0 0 3px #b5402f44}
+.sent{font:19px var(--f-news);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sent input{width:150px;background:#0b100f;border:0;border-bottom:2px solid var(--brass);padding:4px 6px;font:19px var(--f-news);text-align:center}
+.bank{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.bank button{background:#0b100f;border:1px solid #7fa39c88;color:#bfe0d9;border-radius:20px;padding:3px 12px;font:15px var(--f-news)}
+.why{font-size:13.5px;color:var(--muted);margin-top:8px}
+.chk{display:flex;gap:8px;flex-wrap:wrap}
+.chk label{display:flex;gap:8px;align-items:center;background:#1c2725;border:1px solid #ffffff1c;border-radius:20px;padding:6px 14px;cursor:pointer}
+.chk input{accent-color:var(--brass);width:18px;height:18px}
+/* act4 */
+.dossier{background:#e8dcc0;color:#2b2112;border-radius:3px;padding:20px clamp(14px,3vw,30px);box-shadow:0 18px 50px #000a;position:relative;background-image:repeating-linear-gradient(0deg,#0000 0 31px,#7a5a2a12 31px 32px)}
+.dossier h2{font:400 26px var(--f-type);margin:0 0 4px;letter-spacing:.04em}
+.dossier .ts{position:absolute;top:16px;right:18px;font:700 16px var(--f-type);color:var(--stamp);border:3px solid var(--stamp);padding:4px 10px;transform:rotate(6deg);opacity:.85}
+.tipt{width:100%;border-collapse:collapse;margin-top:12px}
+.tipt th,.tipt td{border:1px solid #2b211233;padding:10px;vertical-align:top;text-align:left}
+.tipt th{width:130px;font:400 15px var(--f-type);background:#2b21120d}
+.tipt td.tipc{width:30%;font-size:12.5px;color:#6b5a3a}
+.tline{font:17px var(--f-type);display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;line-height:2}
+.tline input,.codename{background:#fff8;border:0;border-bottom:2px solid #2b2112;padding:2px 6px;font:17px var(--f-type);min-width:120px;flex:1 1 140px;color:#1d2f5c}
+.fld{position:relative}
+.tipt .q{font:700 14px var(--f-kr);color:#2b2112}.tipt .need{font:12.5px var(--f-kr);color:#7a5a20;margin:2px 0 6px}
+textarea.tw{width:100%;min-height:62px;background:#fffbf0;border:1px solid #2b211233;border-bottom:2px solid #2b2112;border-radius:2px;padding:8px 10px;font:17px/1.6 var(--f-type);color:#1d2f5c;resize:vertical}
+.starters{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.starters button{background:#2b21120d;border:1px solid #2b211233;color:#3b2c14;border-radius:14px;padding:1px 10px;font:14px var(--f-type)}
+.who{position:absolute;top:-16px;right:0;font:700 10px var(--f-kr);background:#1d6b5c;color:#fff;border-radius:8px;padding:0 6px;white-space:nowrap}
+@media (max-width:720px){.tipt th{width:auto;display:block}.tipt td{display:block}.tipt tr{display:block;border-bottom:2px solid #2b211233}}
+.status{display:inline-flex;align-items:center;gap:8px;font:700 13px var(--f-kr);padding:4px 12px;border-radius:20px;background:#ffffff14}
+.status.review{background:#c9a86a33;color:var(--brass)}.status.feedback{background:#5f9e6a33;color:#9fd6a8}.status.final{background:#b5402f33;color:#f0a493}
+.fb{background:#fff7e0;color:#3a2a10;border-left:5px solid var(--brass);padding:14px 16px;border-radius:4px;margin:16px 0}
+.fb b{display:block;font-size:13px;color:#8a6a2e;margin-bottom:4px}
+textarea.final{width:100%;min-height:200px;background:#fffdf6;color:#1d2f5c;border:1px solid #2b211244;border-radius:3px;padding:14px;font:18px/1.7 var(--f-type)}
+.wc{font:700 14px var(--f-kr)}.wc.over{color:var(--bad)}
+.ov{position:fixed;inset:0;z-index:60;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:16px}
+.ov video{max-width:min(1100px,100%);max-height:78vh;border-radius:4px}
+.ov .skip{position:absolute;top:calc(14px + env(safe-area-inset-top));right:16px}
+.vcap{font:15px var(--f-type);color:#7dffa8;letter-spacing:.04em;text-shadow:0 0 8px #3f9}
+.scramble{font:18px/1.6 var(--f-type);color:#7dffa8;max-width:760px;word-break:break-all;text-shadow:0 0 8px #3f9}
+.telex{background:#efe6cf;color:#1b1b1b;font:19px/1.7 var(--f-type);padding:24px 26px;border-radius:3px;max-width:680px;width:100%;box-shadow:0 20px 60px #000c;position:relative;white-space:pre-wrap}
+.telex .hd{font:700 12px var(--f-kr);letter-spacing:.14em;color:#7a3a2a;margin-bottom:10px;white-space:normal}
+.telex .ko{font:14px/1.7 var(--f-kr);color:#5a4a30;margin-top:14px;white-space:normal;border-top:1px dashed #0003;padding-top:10px}
+.cursor::after{content:'▌';animation:blink 1s steps(1) infinite}@keyframes blink{50%{opacity:0}}
+.result img{max-width:100%;border-radius:4px;box-shadow:0 18px 40px #000a;display:block}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top" id="top" hidden>
+  <div class="row"><div class="brand">1987 · <em>외신 미션</em></div><div class="me" id="me"></div></div>
+  <nav class="steps" id="steps" aria-label="활동"></nav>
+</header>
+<main id="view"></main>
+<div id="ovRoot"></div>
+<script src="common.js"></script>
+<script>
+(() => {
+const D = window.M87, $ = s => document.querySelector(s), el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = v => { const m = String(v || '').match(/\d+/); return m ? String(parseInt(m[0], 10)) : '' };
+const LS = k => 'm87_' + k;
+const get = (k, d) => { try { const v = localStorage.getItem(LS(k)); return v ? JSON.parse(v) : d } catch (e) { return d } };
+const put = (k, v) => { try { localStorage.setItem(LS(k), JSON.stringify(v)) } catch (e) { } };
+let me = get('me', null);
+const meKey = () => me.cls + '_' + me.no;
+async function api(path, body) { const r = await fetch('/api/m/' + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : { cache: 'no-store' }); if (!r.ok) throw new Error(r.status); return r.json() }
+function saveAct(act, data) { put(act + '_' + meKey(), data); api('student', { ...me, act: 'act' + act.slice(1), data }).catch(() => { }) }
+const STEPS = [['a1', '1', '형광펜으로 읽기'], ['a2', '2', 'T/F 확인'], ['a3', '3', '증거로 바로잡기'], ['a4', '4', '비밀 제보서 (조별)']];
+function nav(cur) {
+  $('#top').hidden = false;
+  $('#me').innerHTML = `<b>${me.cls}반 ${me.no}번</b> · ${me.team}조 <button class="btn" style="padding:2px 10px;font-size:12px;margin-left:6px" id="out">바꾸기</button>`;
+  $('#out').onclick = () => { me = null; put('me', null); location.hash = '' ; route() };
+  $('#steps').innerHTML = STEPS.map(([k, n, t]) => { const done = k === 'a4' ? get('a4done_' + me.cls + '_' + me.team, false) : !!get(k + '_' + meKey(), null)?.done; return `<a href="#${k}" class="${k === cur ? 'on' : ''}"><b>활동 ${n}</b>${t}${done ? ' <span class="ok">✓</span>' : ''}</a>` }).join('');
+}
+/* ---------- newspaper ---------- */
+function newspaper(opts = {}) {
+  const w = el('article', 'paper' + (opts.pick ? ' pickable' : ''));
+  w.innerHTML = `<span class="fic">게임 속 가상 자료</span><div class="mast"><div class="nm">The World Wire</div><div class="tag">International News Service · Asia Desk</div></div>
+  <div class="strip"><span>Vol. LXII · No. 16</span><span>Friday, January 16, 1987</span><span>Seoul Bureau</span></div>
+  <h2 class="head">${esc(D.headline)}</h2><p class="deck">A doctor’s report stays hidden. Questions remain unanswered.</p>
+  <div class="byline"><span>By Our Correspondent in Seoul</span><span>Special Report</span></div>
+  <div class="cols">${D.paras.map((p, i) => `<p>${i === 0 ? `<span class="dl">${esc(D.dateline)}</span> ` : ''}${p.map(([id, t]) => `<span class="s" data-id="${id}" tabindex="${opts.pick ? 0 : -1}">${esc(t)}${opts.ids ? `<span class="sid">${id}</span>` : ''}</span>`).join(' ')}</p>`).join('')}</div>`;
+  return w;
+}
+function flash(id) { const s = document.querySelector(`.s[data-id="${id}"]`); if (!s) return; s.scrollIntoView({ behavior: 'smooth', block: 'center' }); s.classList.add('flash'); setTimeout(() => s.classList.remove('flash'), 1800) }
+/* ---------- entry ---------- */
+function entry() {
+  $('#top').hidden = true;
+  const v = $('#view'); v.innerHTML = `<section class="entry"><div class="eyebrow">2차시 · 평행세계 2026</div><h1>1987,<br>외신 기사와 비밀 제보</h1>
+  <p class="lead">2026년, 이 세계에는 여전히 독재가 이어지고 신문은 막혀 있어요. 게임에서 찾은 진실을 바탕으로, 1987년 외신 기사가 무엇을 놓쳤는지 확인하고, 조원들과 함께 외국 기자에게 암호화한 비밀 제보서를 보내요.</p>
+  <form id="f" autocomplete="off"><div class="grid3"><label for="c">반<input id="c" inputmode="numeric" maxlength="2" placeholder="2" required></label><label for="n">번호<input id="n" inputmode="numeric" maxlength="2" placeholder="7" required></label><label for="t">조<input id="t" inputmode="numeric" maxlength="2" placeholder="3" required></label></div>
+  <div class="actions"><button class="btn primary" type="submit">미션 시작</button><span class="msg err" id="e"></span></div></form>
+  <p class="credit">made by. 나수진쌤 &amp; 전소현쌤 · 교사용 화면은 <a href="teacher.html" style="color:var(--brass)">teacher.html</a></p></section>`;
+  if (me) { $('#c').value = me.cls; $('#n').value = me.no; $('#t').value = me.team }
+  $('#f').onsubmit = e => { e.preventDefault(); const c = num($('#c').value), n = num($('#n').value), t = num($('#t').value); if (!c || !n || !t) { $('#e').textContent = '반, 번호, 조를 모두 숫자로 입력하세요.'; return } me = { cls: c, no: n, team: t }; put('me', me); api('student', me).catch(() => { }); location.hash = 'a1' };
+}
+/* ---------- 활동 1 ---------- */
+function act1() {
+  nav('a1'); const v = $('#view'); const saved = get('a1_' + meKey(), null); const marks = saved?.marks || {}; let pen = 'pink';
+  v.innerHTML = `<h1 class="pg">활동 1 · 형광펜으로 기사 읽기</h1><p class="lead">2026년, 폐기될 뻔한 상자 속에서 1987년 외국 통신사의 기사 기록을 찾았어요. 이 세계의 신문은 막혀 있어서, 이 기사가 남은 거의 유일한 바깥의 기록이에요. 문장을 세 가지 색으로 구분하며 읽어요.</p>
+  <div class="how"><h3>이렇게 해요</h3><ol><li>아래에서 <b>펜을 먼저 고르고</b>, 기사에서 해당하는 <b>문장을 누르세요</b>. 같은 펜으로 다시 누르면 지워져요.</li><li>한 문장에는 한 가지 색만 칠할 수 있어요. 해당하지 않는 문장은 칠하지 않아요.</li><li>다 칠했으면 맨 아래 <b>제출하고 확인하기</b>를 누르세요.</li></ol></div>
+  <div class="pens" id="pens">${Object.entries(D.pens).map(([k, p]) => `<button class="pen" data-pen="${k}" aria-pressed="${k === pen}"><i style="background:var(--${k})"></i><span><b>${p.name}</b><small>${p.desc}</small></span></button>`).join('')}<button class="pen eraser" data-pen="" aria-pressed="false"><i style="background:#fff;border:2px dashed #999"></i><span><b>지우개</b></span></button></div>
+  <div id="np"></div><div class="actions"><button class="btn primary" id="sub">제출하고 확인하기</button><span class="msg" id="cnt"></span></div><div id="res"></div>`;
+  const np = newspaper({ pick: true }); $('#np').appendChild(np);
+  const paint = () => { np.querySelectorAll('.s').forEach(s => { s.classList.remove('pink', 'yellow', 'blue'); const m = marks[s.dataset.id]; if (m) s.classList.add(m) }); const c = { pink: 0, yellow: 0, blue: 0 }; Object.values(marks).forEach(m => c[m]++); $('#cnt').textContent = `분홍 ${c.pink} · 노랑 ${c.yellow} · 하늘 ${c.blue}` };
+  paint();
+  $('#pens').querySelectorAll('.pen').forEach(b => b.onclick = () => { pen = b.dataset.pen; $('#pens').querySelectorAll('.pen').forEach(x => x.setAttribute('aria-pressed', String(x === b))) });
+  const tap = s => { const id = s.dataset.id; if (!pen || marks[id] === pen) delete marks[id]; else marks[id] = pen; np.querySelectorAll('.s').forEach(x => x.classList.remove('r-ok', 'r-miss', 'r-bad')); paint(); put('a1_' + meKey(), { ...(get('a1_' + meKey(), {}) || {}), marks }) };
+  np.querySelectorAll('.s').forEach(s => { s.onclick = () => tap(s); s.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(s) } } });
+  $('#sub').onclick = () => {
+    let score = 0, total = 0, wrong = 0; const rows = [];
+    Object.entries(D.pens).forEach(([k, p]) => { total += p.need.length; const got = p.need.filter(id => marks[id] === k); score += got.length; const miss = p.need.filter(id => marks[id] !== k); rows.push([k, p, got.length, miss]) });
+    np.querySelectorAll('.s').forEach(s => { const id = s.dataset.id, m = marks[id]; let exp = null; Object.entries(D.pens).forEach(([k, p]) => { if (p.need.includes(id) || p.ok.includes(id)) exp = exp || k }); const need = Object.entries(D.pens).find(([k, p]) => p.need.includes(id)); s.classList.remove('r-ok', 'r-miss', 'r-bad'); if (m) { const okk = Object.entries(D.pens).some(([k, p]) => k === m && (p.need.includes(id) || p.ok.includes(id))); s.classList.add(okk ? 'r-ok' : 'r-bad'); if (!okk) wrong++ } else if (need) s.classList.add('r-miss') });
+    $('#res').innerHTML = `<div class="card res"><div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap"><span class="score">${score} / ${total}</span><span class="msg">꼭 칠해야 할 문장 중 맞게 칠한 수${wrong ? ` · 다른 색으로 칠한 문장 ${wrong}개` : ''}</span></div>
+    <div class="legend"><span>초록 밑줄: 맞게 칠함</span><span>점선 테두리: 놓친 문장</span><span>빨간 물결: 다시 볼 문장</span></div>
+    ${rows.map(([k, p, g, miss]) => `<div class="row"><i style="background:var(--${k})"></i><div><b>${p.short}</b> · ${g}/${p.need.length}${miss.length ? ` <span class="msg">(놓친 문장: ${miss.join(', ')})</span>` : ' ✓'}<div class="why">${p.why}</div></div></div>`).join('')}
+    <div class="actions"><button class="btn" id="again">고쳐서 다시 제출</button><a class="btn primary" href="#a2" style="text-decoration:none">활동 2로 →</a></div></div>`;
+    np.querySelectorAll('.s').forEach(s => { const sid = el('span', 'sid'); sid.textContent = s.dataset.id; if (!s.querySelector('.sid')) s.appendChild(sid) });
+    $('#again').onclick = () => { np.querySelectorAll('.s').forEach(x => x.classList.remove('r-ok', 'r-miss', 'r-bad')); $('#res').innerHTML = ''; window.scrollTo({ top: 0, behavior: 'smooth' }) };
+    const prev = get('a1_' + meKey(), {}) || {};
+    saveAct('a1', { done: true, marks, score, total, wrong, tries: (prev.tries || 0) + 1 }); nav('a1');
+    $('#res').scrollIntoView({ behavior: 'smooth' });
+  };
+}
+/* ---------- 활동 2 ---------- */
+function act2() {
+  nav('a2'); const v = $('#view'); const saved = get('a2_' + meKey(), null); const ans = saved?.answers || {};
+  v.innerHTML = `<h1 class="pg">활동 2 · 기사 내용 확인 (T/F)</h1><p class="lead">기사와 같으면 T, 다르면 F를 고르세요. 제출하면 바로 채점되고, 근거 문장을 기사에서 보여 줘요.</p>
+  <div class="split"><div class="sticky" id="np"></div><div><div class="tf" id="tf"></div><div class="actions"><button class="btn primary" id="sub">제출하고 채점하기</button><span class="msg" id="m"></span></div><div id="res"></div></div></div>`;
+  $('#np').appendChild(newspaper({ ids: true }));
+  const render = (graded) => { $('#tf').innerHTML = D.tf.map(([q, a, id, why], i) => { const pick = ans[i]; const st = graded ? (pick === a ? 'ok' : 'no') : ''; return `<div class="tfq ${st}"><span class="n">${'①②③④⑤⑥'[i]}</span><span class="en">${esc(q)}</span><span class="seg"><button data-i="${i}" data-v="1" aria-pressed="${pick === true}" ${graded ? 'disabled' : ''}>T</button><button data-i="${i}" data-v="0" aria-pressed="${pick === false}" ${graded ? 'disabled' : ''}>F</button></span>${graded ? `<span class="why">${pick === a ? '✓ 정답' : `✗ 정답은 ${a ? 'T' : 'F'}`} · 근거: ${esc(why)} <button data-id="${id}">기사에서 보기 (${id})</button></span>` : ''}</div>` }).join('');
+    $('#tf').querySelectorAll('.seg button').forEach(b => b.onclick = () => { ans[b.dataset.i] = b.dataset.v === '1'; render(false) });
+    $('#tf').querySelectorAll('.why button').forEach(b => b.onclick = () => flash(b.dataset.id)) };
+  render(!!saved?.done);
+  if (saved?.done) { $('#sub').textContent = '다시 풀기'; $('#m').textContent = `점수 ${saved.score} / 6` }
+  $('#sub').onclick = () => {
+    if ($('#sub').textContent === '다시 풀기') { Object.keys(ans).forEach(k => delete ans[k]); render(false); $('#sub').textContent = '제출하고 채점하기'; $('#m').textContent = ''; return }
+    if (Object.keys(ans).length < 6) { $('#m').className = 'msg err'; $('#m').textContent = '6문제를 모두 고르세요.'; return }
+    const score = D.tf.filter(([q, a], i) => ans[i] === a).length; render(true);
+    $('#m').className = 'msg'; $('#m').innerHTML = `<span class="score" style="font-size:26px">${score} / 6</span>`; $('#sub').textContent = '다시 풀기';
+    const prev = get('a2_' + meKey(), {}) || {}; saveAct('a2', { done: true, answers: { ...ans }, score, tries: (prev.tries || 0) + 1 }); nav('a2');
+    $('#res').innerHTML = `<div class="actions"><a class="btn primary" href="#a3" style="text-decoration:none">활동 3으로 →</a></div>`;
+  };
+}
+/* ---------- 활동 3 ---------- */
+function act3() {
+  nav('a3'); const v = $('#view'); const saved = get('a3_' + meKey(), null); const st = saved?.st || { picks: {}, words: {}, core: {} };
+  v.innerHTML = `<h1 class="pg">활동 3 · 증거로 기사 바로잡기</h1><p class="lead">기사에는 경찰 쪽 이야기만 있어요. 게임에서 모은 단서로 기사를 바로잡아요.</p>
+  <div class="how"><h3>이렇게 해요 · 게임 마지막에 쓴 단서 수첩을 옆에 펴 두세요</h3><ol>
+  <li><b>기사 문장</b>(분홍 상자)은 경찰의 설명이나, 설명이 빠진 문장이에요.</li>
+  <li><b>STEP A</b> · 이 문장이 틀렸거나 부족하다는 것을 보여 주는 <b>단서 카드</b>를 고르세요. 카드 번호(1-3, 3-4 …)는 게임 문항 번호예요.</li>
+  <li><b>STEP B</b> · 그 단서를 영어 증거 문장으로 바꿔요. 빈칸에 들어갈 단어를 아래 단어 상자에서 누르거나 직접 쓰세요.</li>
+  <li>마지막으로 <b>이 기사에 빠진 것</b>을 모두 고른 뒤 제출하세요. 바로 채점돼요.</li></ol>
+  <p style="margin:8px 0 0;font-size:13.5px;color:var(--muted)">예) 기사: “The student died at a hospital.” → 단서: 접수대장(1-1) → 증거 문장: He died at a <u>police office</u>.</p></div>
+  <div id="fx"></div>
+  <div class="card"><div class="stepl">마지막 질문 · 이 기사에 빠진 것은 무엇일까? (모두 고르기)</div><div class="chk" id="core">${D.core.map(([t], i) => `<label><input type="checkbox" data-i="${i}" ${st.core[i] ? 'checked' : ''}> ${t}</label>`).join('')}</div><div class="why" id="coreWhy"></div></div>
+  <div class="actions"><button class="btn primary" id="sub">제출하고 채점하기</button><span class="msg" id="m"></span></div><div id="res"></div>`;
+  const draw = (graded) => {
+    $('#fx').innerHTML = D.fix.map((f, i) => { const pk = st.picks[i], wd = st.words[i] || ''; const okA = f.card.includes(pk), okB = f.ans.includes(wd.trim().toLowerCase()); const cls = graded ? (okA && okB ? 'ok' : 'no') : '';
+      return `<div class="fix ${cls}"><div class="claim"><small>기사 문장 ${i + 1}</small>${esc(f.claim)}</div>
+      <div class="stepl">STEP A · 이 문장을 바로잡는 단서 카드는?</div><div class="cards">${D.cards.map(([L, id, nm, tx]) => `<button class="cardp" data-i="${i}" data-c="${L}" aria-pressed="${pk === L}" ${graded ? 'disabled' : ''}><small>${id}</small><b>${nm}</b>${tx}</button>`).join('')}</div>
+      <div class="stepl">STEP B · 증거 문장 완성하기</div><div class="sent">${esc(f.frame[0])} <input data-i="${i}" value="${esc(wd)}" aria-label="빈칸 ${i + 1}" ${graded ? 'disabled' : ''}> ${esc(f.frame[1])}</div>
+      ${graded ? `<div class="why">${okA ? '✓' : '✗'} 단서 카드: ${f.card.join(' 또는 ')} · ${okB ? '✓' : '✗'} 빈칸: <b>${f.ans[0]}</b><br>${f.why}</div>` : ''}</div>` }).join('') + `<div class="card" style="margin-bottom:14px"><div class="stepl" style="margin-top:0">단어 상자 (STEP B 빈칸용 · 누르면 마지막으로 누른 빈칸에 들어가요)</div><div class="bank">${D.bank.map(w => `<button data-w="${w}" ${graded ? 'disabled' : ''}>${w}</button>`).join('')}</div></div>`;
+    let lastInput = null;
+    $('#fx').querySelectorAll('.cardp').forEach(b => b.onclick = () => { st.picks[b.dataset.i] = b.dataset.c; keep(); draw(false) });
+    $('#fx').querySelectorAll('.sent input').forEach(inp => { inp.onfocus = () => lastInput = inp; inp.oninput = () => { st.words[inp.dataset.i] = inp.value; keep() } });
+    $('#fx').querySelectorAll('.bank button').forEach(b => b.onclick = () => { const t = lastInput || [...$('#fx').querySelectorAll('.sent input')].find(x => !x.value) ; if (!t) return; t.value = b.dataset.w; st.words[t.dataset.i] = t.value; keep(); t.focus() });
+  };
+  const keep = () => put('a3_' + meKey(), { ...(get('a3_' + meKey(), {}) || {}), st });
+  $('#core').querySelectorAll('input').forEach(c => c.onchange = () => { st.core[c.dataset.i] = c.checked; keep() });
+  draw(!!saved?.done);
+  if (saved?.done) { $('#sub').textContent = '다시 풀기'; $('#m').textContent = `점수 ${saved.score} / ${saved.total}` }
+  $('#sub').onclick = () => {
+    if ($('#sub').textContent === '다시 풀기') { st.picks = {}; st.words = {}; st.core = {}; $('#core').querySelectorAll('input').forEach(c => { c.checked = false; c.disabled = false }); $('#coreWhy').textContent = ''; draw(false); $('#sub').textContent = '제출하고 채점하기'; $('#m').textContent = ''; $('#res').innerHTML = ''; return }
+    if (D.fix.some((f, i) => !st.picks[i] || !(st.words[i] || '').trim())) { $('#m').className = 'msg err'; $('#m').textContent = '네 문장 모두 STEP A와 STEP B를 채우세요.'; return }
+    let score = 0; D.fix.forEach((f, i) => { if (f.card.includes(st.picks[i])) score++; if (f.ans.includes((st.words[i] || '').trim().toLowerCase())) score++ });
+    const coreOk = D.core.every(([t, a], i) => !!st.core[i] === a); if (coreOk) score++;
+    const total = D.fix.length * 2 + 1; draw(true);
+    $('#core').querySelectorAll('input').forEach(c => c.disabled = true);
+    $('#coreWhy').innerHTML = `${coreOk ? '✓' : '✗'} 정답: 의사의 관찰, 부검 결과, 과학적 근거. 기사에는 경찰의 말만 있고, 증거가 될 기록은 하나도 실리지 않았어요.`;
+    $('#m').className = 'msg'; $('#m').innerHTML = `<span class="score" style="font-size:26px">${score} / ${total}</span>`; $('#sub').textContent = '다시 풀기';
+    const prev = get('a3_' + meKey(), {}) || {}; saveAct('a3', { done: true, st: JSON.parse(JSON.stringify(st)), score, total, tries: (prev.tries || 0) + 1 }); nav('a3');
+    $('#res').innerHTML = `<div class="actions"><span class="msg">여기서 완성한 증거 문장은 비밀 제보서의 ④ EVIDENCE와 카드뉴스에 그대로 쓸 수 있어요.</span><a class="btn primary" href="#a4" style="text-decoration:none">활동 4로 →</a></div>`;
+  };
+}
+/* ---------- 활동 4 (조별) ---------- */
+let poll = null, G = {}, focusKey = null, lastSent = {}, pendingT = {};
+function stopPoll() { clearInterval(poll); poll = null }
+const words = s => (String(s || '').trim().match(/\S+/g) || []).length;
+function act4() {
+  nav('a4'); const v = $('#view'); const gk = me.cls + '_' + me.team;
+  v.innerHTML = `<h1 class="pg">활동 4 · 비밀 제보서 <span style="font-size:16px;color:var(--muted)">(${me.cls}반 ${me.team}조 함께 쓰기)</span></h1>
+  <p class="lead">같은 조 친구들이 동시에 같은 제보서를 써요. 누가 어느 칸을 쓰고 있는지 칸 위에 표시돼요.</p>
+  <div id="g"><p class="msg">조 제보서를 불러오는 중…</p></div>`;
+  const load = async () => { try { const d = await api('group?cls=' + me.cls + '&team=' + me.team); G = { ...d, ...dirty }; render() } catch (e) { $('#g').innerHTML = '<p class="msg err">서버에 연결하지 못했어요. 잠시 뒤 다시 시도해요.</p>' } };
+  api('group', { cls: me.cls, team: me.team, member: me.no, patch: {} }).catch(() => { });
+  load(); stopPoll(); poll = setInterval(load, 2000);
+}
+const dirty = {};
+function send(patch, extra = {}) { G = { ...G, ...patch }; return api('group', { cls: me.cls, team: me.team, patch, ...extra }).then(d => { for (const k in patch) if (dirty[k] === patch[k]) delete dirty[k]; G = { ...d, ...dirty }; return d }).catch(() => { }) }
+function presence(f) { send({ ['p_' + me.no]: { f, t: Date.now() } }) }
+function render() {
+  const g = $('#g'); if (!g) return; const st = G.status || 'editing';
+  if (st === 'final') { stopPoll(); if (!g.dataset.final) { g.dataset.final = '1'; finale(false) } return }
+  const whoOn = f => Object.entries(G).filter(([k, v]) => k.startsWith('p_') && k !== 'p_' + me.no && v && v.f === f && Date.now() - v.t < 6000).map(([k]) => k.slice(2) + '번');
+  if (!g.querySelector('.dossier')) {
+    g.innerHTML = `<div class="how"><h3>순서</h3><ol><li><b>조 이름(CODE NAME)</b>을 영어로 정해서 쓰세요. 실명·학교 이름은 쓰지 않아요.</li><li>표의 칸마다 <b>질문에 답하는 영어 문장</b>을 1~2개씩 자유롭게 쓰세요. 꼭 들어가야 할 것(✓)만 지키면 표현은 자유예요. 막히면 아래 표현 버튼을 눌러 시작해도 돼요.</li><li>다 쓰면 <b>선생님께 검토 요청</b>을 누르세요. 피드백이 오면 완성본으로 옮겨 쓰고 <b>암호화하여 전송</b>해요.</li></ol></div>
+    <div class="dossier"><span class="ts">TOP SECRET</span><h2>SECRET TIP</h2><div style="font:15px var(--f-type)">TO: Foreign Reporter, Global Truth News · SECURE DROP 2026</div>
+    <div class="fld" style="margin-top:14px"><label style="font:15px var(--f-type)">CODE NAME: <input class="codename" data-k="codename" maxlength="30" placeholder="우리 조 이름 (영어로)"></label></div>
+    <table class="tipt"><tbody>${D.tip.map(t => `<tr><th>${t.h}</th><td><div class="q">${t.q}</div><div class="need">✓ ${t.need}</div><div class="fld"><textarea class="tw" data-k="${t.k}" maxlength="400" rows="2" aria-label="${t.h}" placeholder="영어로 1~2문장"></textarea></div><div class="starters">${t.starters.map(x => `<button type="button" data-ins="${t.k}">${esc(x)}</button>`).join('')}</div></td></tr>`).join('')}</tbody></table>
+    <p style="font:13px var(--f-kr);color:#6b5a3a;margin:10px 0 0">표 전체 <b id="tcount">0</b>단어 · 완성본은 CODE NAME을 빼고 70단어 이내예요.</p></div>
+    <div class="actions"><span class="status" id="st"></span><button class="btn primary" id="rev">선생님께 검토 요청</button><span class="msg" id="rm"></span></div>
+    <div id="after"></div>`;
+    g.querySelectorAll('[data-ins]').forEach(b => b.onclick = () => { const t = g.querySelector(`[data-k="${b.dataset.ins}"]`); const pos = t.selectionStart ?? t.value.length; const ins = (pos && !/\s$/.test(t.value.slice(0, pos)) ? ' ' : '') + b.textContent + ' '; t.value = t.value.slice(0, pos) + ins + t.value.slice(pos); t.focus(); t.selectionStart = t.selectionEnd = pos + ins.length; t.oninput() });
+    g.querySelectorAll('[data-k]:not(.final)').forEach(inp => {
+      const k = inp.dataset.k;
+      inp.onfocus = () => { focusKey = k; presence(k.replace('f_', '')) };
+      inp.onblur = () => { focusKey = null };
+      inp.oninput = () => { dirty[k] = inp.value; G[k] = inp.value; clearTimeout(pendingT[k]); pendingT[k] = setTimeout(() => { lastSent[k] = dirty[k]; send({ [k]: dirty[k] }) }, 350) };
+    });
+    $('#rev').onclick = () => { const empty = g.querySelectorAll('[data-k]:not(.final)'); const miss = [...empty].filter(i => !i.value.trim()).length; if (miss) { $('#rm').className = 'msg err'; $('#rm').textContent = `아직 비어 있는 칸이 ${miss}개 있어요.`; return } send({}, { status: 'review' }).then(render); $('#rm').className = 'msg'; $('#rm').textContent = '선생님께 보냈어요. 피드백을 기다려요.' };
+  }
+  g.querySelectorAll('[data-k]:not(.final)').forEach(inp => { const k = inp.dataset.k; if (k !== focusKey && !(k in dirty) && (G[k] ?? '') !== inp.value && document.activeElement !== inp) inp.value = G[k] || ''; const box = inp.closest('.fld'); let tag = box && box.querySelector('.who'); const ws = whoOn(k.replace('f_', '')); if (ws.length) { if (!tag) { tag = el('span', 'who'); box.appendChild(tag) } tag.textContent = ws.join('·') + ' 작성 중' } else if (tag) tag.remove() });
+  const tc = $('#tcount'); if (tc) tc.textContent = D.tip.reduce((a, t) => a + words(G[t.k] || (g.querySelector(`[data-k="${t.k}"]`) || {}).value || ''), 0);
+  const lbl = { editing: '작성 중', review: '선생님 검토 중', feedback: '피드백 도착' }[st];
+  $('#st').className = 'status ' + st; $('#st').textContent = '● ' + lbl;
+  $('#rev').textContent = st === 'feedback' ? '고친 표로 다시 검토 요청' : '선생님께 검토 요청';
+  const after = $('#after');
+  if (st === 'feedback') {
+    if (!after.querySelector('textarea')) {
+      after.innerHTML = `<div class="fb"><b>선생님 피드백</b><span id="fbt"></span></div>
+      <div class="card"><div class="stepl" style="margin-top:0">완성본 옮겨 쓰기 · 피드백을 반영해 한 편의 제보서로 옮겨 써요 (CODE NAME 제외 70단어 이내)</div>
+      <div class="fld"><textarea class="final" data-k="final" aria-label="완성한 제보서"></textarea></div>
+      <div class="actions"><button class="btn" id="mk">표에 쓴 문장 모으기</button><span class="wc" id="wc"></span><span style="flex:1"></span><button class="btn primary" id="go">암호화하여 전송</button></div><p class="msg" id="gm"></p></div>`;
+      const ta = after.querySelector('textarea');
+      ta.onfocus = () => { focusKey = 'final'; presence('final') }; ta.onblur = () => focusKey = null;
+      ta.oninput = () => { wc(); dirty.final = ta.value; G.final = ta.value; clearTimeout(pendingT.final); pendingT.final = setTimeout(() => send({ final: dirty.final }), 400) };
+      $('#mk').onclick = () => { ta.value = D.tip.map(t => (G[t.k] || '').trim()).filter(Boolean).join(' '); wc(); send({ final: ta.value }) };
+      $('#go').onclick = () => { const n = words(ta.value); if (n < 20) { $('#gm').className = 'msg err'; $('#gm').textContent = '완성본을 먼저 써요 (20단어 이상).'; return } if (n > 70) { $('#gm').className = 'msg err'; $('#gm').textContent = `70단어를 넘었어요 (${n}단어). 줄여 주세요.`; return } if (!(G.codename || '').trim()) { $('#gm').className = 'msg err'; $('#gm').textContent = 'CODE NAME을 먼저 정하세요.'; return } send({ final: ta.value }, { status: 'final' }).then(() => { stopPoll(); $('#g').dataset.final = '1'; finale(true) }) };
+    }
+    $('#fbt').textContent = G.t_feedback || '';
+    const ta = after.querySelector('textarea'); if (focusKey !== 'final' && !('final' in dirty) && document.activeElement !== ta && (G.final || '') !== ta.value) ta.value = G.final || '';
+    const box = ta.closest('.fld'); let tag = box.querySelector('.who'); const ws = whoOn('final'); if (ws.length) { if (!tag) { tag = el('span', 'who'); box.appendChild(tag) } tag.textContent = ws.join('·') + ' 작성 중' } else if (tag) tag.remove();
+    wc();
+  } else after.innerHTML = '';
+  function wc() { const ta = after.querySelector('textarea'); if (!ta) return; const n = words(ta.value); $('#wc').textContent = `${n} / 70 단어`; $('#wc').className = 'wc' + (n > 70 ? ' over' : '') }
+}
+/* ---------- 전송 연출 ---------- */
+function ov(html) { const o = el('div', 'ov', html); $('#ovRoot').innerHTML = ''; $('#ovRoot').appendChild(o); return o }
+function finale(play) {
+  put('a4done_' + me.cls + '_' + me.team, true); nav('a4');
+  const after = () => { $('#ovRoot').innerHTML = ''; showResult(); setTimeout(telex, 700) };
+  if (!play) { showResult(); return }
+  const o = ov(`<button class="btn skip" id="sk">건너뛰기</button><div class="scramble" id="scr"></div><video id="vd" playsinline preload="auto" hidden></video><div class="vcap" id="vcap" hidden>🔒 암호화 완료 · 서울에서 외신 사무실로 전송 중…</div>`);
+  const txt = (G.final || '') + ' ';
+  let k = 0; const chars = '0123456789ABCDEF#@$%&*<>/\\|'; const scr = $('#scr');
+  const it = setInterval(() => { k++; scr.textContent = txt.split('').map((c, i) => i < k * 3 ? chars[(i * 7 + k) % chars.length] : c).join(''); if (k * 3 > txt.length + 20) clearInterval(it) }, 40);
+  const vd = $('#vd'); let started = false;
+  const go = () => { if (started) return; started = true; clearInterval(it); scr.hidden = true; vd.hidden = false; $('#vcap').hidden = false; vd.ontimeupdate = () => { if (vd.duration && vd.currentTime > vd.duration / 2) $('#vcap').textContent = '📨 외신 사무실 · 제보서 수신 완료' }; vd.play().catch(() => { vd.muted = true; vd.play().catch(after) }) };
+  if (D.video && !D.video.startsWith('__')) { vd.src = D.video; vd.onended = after; vd.onerror = () => setTimeout(after, 1500); setTimeout(go, 1600) } else setTimeout(after, 3800);
+  $('#sk').onclick = () => { clearInterval(it); vd.pause(); after() };
+}
+function showResult() {
+  const g = $('#g'); g.innerHTML = `<div class="card"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="status final">● 전송 완료</span><span class="msg">암호화된 제보서가 외신에 전달됐어요.</span></div>
+  <div class="result" style="margin-top:16px"><img id="tipImg" alt="우리 조 비밀 제보서"></div>
+  <div class="actions"><button class="btn primary" id="sv">제보서 이미지로 저장</button><button class="btn" id="tx">외신의 답장 다시 보기</button><span class="msg">저장한 이미지는 임팩트스페이스 보드에 올려요.</span></div></div>`;
+  drawTip().then(c => { const url = c.toDataURL('image/png'); $('#tipImg').src = url; $('#sv').onclick = () => { const a = document.createElement('a'); a.href = url; a.download = `비밀제보서_${me.cls}반_${me.team}조_${(G.codename || 'CODE').replace(/[^\w가-힣-]/g, '')}.png`; document.body.appendChild(a); a.click(); a.remove() } });
+  $('#tx').onclick = telex;
+}
+async function drawTip() {
+  try { await Promise.all(['400 30px "Special Elite"', '700 20px "Noto Sans KR"'].map(f => document.fonts.load(f))) } catch (e) { }
+  const T = '"Special Elite","Courier New",monospace', K = '"Noto Sans KR",sans-serif';
+  const W = 1080, c = document.createElement('canvas'); c.width = W; c.height = 10; let x = c.getContext('2d');
+  x.font = `30px ${T}`; const lines = []; { let line = ''; String(G.final || '').split(/\s+/).filter(Boolean).forEach(w => { const t = line ? line + ' ' + w : w; if (x.measureText(t).width > W - 180) { lines.push(line); line = w } else line = t }); if (line) lines.push(line) }
+  const bodyEnd = 450 + lines.length * 50; const H = Math.max(1080, bodyEnd + 20 + 300); c.height = H; x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#e9dcbc'); g.addColorStop(1, '#d6c296'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 9000; i++) { x.fillStyle = `rgba(80,55,20,${Math.random() * .06})`; x.fillRect(Math.random() * W, Math.random() * H, 2, 2) }
+  for (let i = 0; i < 40; i++) { const cx = Math.random() * W, cy = Math.random() * H, r = 40 + Math.random() * 160, rg = x.createRadialGradient(cx, cy, 0, cx, cy, r); rg.addColorStop(0, 'rgba(120,80,30,.07)'); rg.addColorStop(1, 'rgba(120,80,30,0)'); x.fillStyle = rg; x.fillRect(cx - r, cy - r, 2 * r, 2 * r) }
+  x.strokeStyle = 'rgba(60,40,15,.35)'; x.lineWidth = 3; x.strokeRect(40, 40, W - 80, H - 80); x.lineWidth = 1; x.strokeRect(52, 52, W - 104, H - 104);
+  x.fillStyle = '#2b1d0c'; x.font = `44px ${T}`; x.fillText('SECRET TIP', 90, 150);
+  x.font = `22px ${T}`; x.fillStyle = '#4a3618'; x.fillText('CASE 1987-0114 · SENT FROM SEOUL, 2026', 90, 192);
+  x.save(); x.translate(820, 150); x.rotate(.12); x.strokeStyle = '#a3261c'; x.lineWidth = 5; x.strokeRect(-150, -46, 300, 80); x.fillStyle = '#a3261c'; x.font = `40px ${T}`; x.textAlign = 'center'; x.fillText('TOP SECRET', 0, 10); x.restore();
+  x.fillStyle = '#2b1d0c'; x.font = `26px ${T}`;
+  x.fillText('CODE NAME : ' + (G.codename || '').toUpperCase().slice(0, 28), 90, 270);
+  x.fillText('TO        : Foreign Reporter, Global Truth News', 90, 312);
+  x.fillText('VIA       : SECURE DROP · END-TO-END ENCRYPTED', 90, 354);
+  x.fillStyle = 'rgba(60,40,15,.5)'; x.fillRect(90, 384, W - 180, 2);
+  x.fillStyle = '#1d2f5c'; x.font = `30px ${T}`; let y = 450; const maxW = W - 180;
+  lines.forEach(l => { x.fillText(l, 90, y); y += 50 });
+  y = H - 340;
+  x.fillStyle = 'rgba(60,40,15,.5)'; x.fillRect(90, y, W - 180, 2);
+  const hash = Array.from({ length: 4 }, () => Array.from({ length: 6 }, () => '0123456789ABCDEF'[Math.floor(Math.random() * 16)]).join('')).join('-');
+  x.fillStyle = '#2b1d0c'; x.font = `22px ${T}`; x.fillText('ENCRYPTION KEY  ' + hash, 90, y + 48); x.fillText('STATUS          TRANSMITTED ✓', 90, y + 84);
+  x.fillStyle = '#5a4524'; x.font = `500 22px ${K}`; x.fillText(`${me.cls}반 ${me.team}조 · ${new Date().toLocaleDateString('ko-KR')}`, 90, y + 128);
+  x.save(); x.translate(860, y + 90); x.rotate(-.2); x.strokeStyle = 'rgba(163,38,28,.85)'; x.lineWidth = 5; x.beginPath(); x.arc(0, 0, 78, 0, Math.PI * 2); x.stroke(); x.lineWidth = 2; x.beginPath(); x.arc(0, 0, 66, 0, Math.PI * 2); x.stroke(); x.fillStyle = 'rgba(163,38,28,.9)'; x.textAlign = 'center'; x.font = `24px ${T}`; x.fillText('DELIVERED', 0, -4); x.font = `18px ${T}`; x.fillText('GLOBAL TRUTH', 0, 24); x.restore();
+  x.fillStyle = '#7a6440'; x.font = `16px ${K}`; x.textAlign = 'center'; x.fillText('1987, 가려진 기록 · 게임 속 가상 미션', W / 2, H - 70);
+  return c;
+}
+function telex() {
+  const en = 'GLOBAL TRUTH NEWS — SECURE INBOX\n\nWe received your tip safely.\nThank you for your courage.\n\nNow we need proof.\nMake card news with the evidence that proves what you told us, and send it to us.\n\n— Your contact at Global Truth News';
+  const ko = '제보를 안전하게 받았습니다. 용기 내 주어 고맙습니다. 이제 증거가 필요합니다. 당신이 알려 준 사실을 입증할 수 있는 증거를 담아 카드뉴스를 만들어 보내 주세요.';
+  const o = ov(`<div class="telex"><div class="hd">🔒 NEW ENCRYPTED MESSAGE · ${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</div><span id="tt" class="cursor"></span><div class="ko" id="tk" hidden>${ko}</div></div><div class="actions"><button class="btn primary" id="ok" hidden>다음 미션: 카드뉴스 만들기</button></div>`);
+  let i = 0; const tt = $('#tt'); const it = setInterval(() => { i += 2; tt.textContent = en.slice(0, i); if (i >= en.length) { clearInterval(it); tt.classList.remove('cursor'); $('#tk').hidden = false; $('#ok').hidden = false } }, 28);
+  o.onclick = e => { if (i < en.length) { i = en.length } };
+  $('#ok').onclick = () => { $('#ovRoot').innerHTML = ''; const g = $('#g'); if (g && !g.querySelector('.next')) g.insertAdjacentHTML('beforeend', `<div class="card next" style="margin-top:16px;border-color:var(--stamp)"><div class="stepl" style="margin-top:0;color:#f0a493">NEXT MISSION · 3차시</div><b style="font:700 20px var(--f-krs)">증거를 담은 카드뉴스를 만들어 외신에 보내라</b><p class="msg" style="margin:6px 0 0">최소 5장 · 영어 문장 8개 이상 · 표지 → 경찰의 주장 → 증거 → 과학 원리 → 결론 순서. 카드뉴스 루브릭과 자기점검표를 확인하세요.</p></div>`) };
+}
+/* ---------- router ---------- */
+function route() {
+  stopPoll(); $('#ovRoot').innerHTML = '';
+  const h = location.hash.slice(1);
+  if (!me) { entry(); return }
+  if (h === 'a2') act2(); else if (h === 'a3') act3(); else if (h === 'a4') act4(); else act1();
+  window.scrollTo(0, 0);
+}
+addEventListener('hashchange', route);
+route();
+})();
+</script>
+</body>
+</html>
