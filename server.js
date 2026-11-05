@@ -6,7 +6,7 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const TEACHER_PW = process.env.TEACHER_PASSWORD || '7891';
 const PUBLIC = path.join(__dirname, 'public');
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.jpg': 'image/jpeg', '.png': 'image/png', '.json': 'application/json', '.ico': 'image/x-icon', '.svg': 'image/svg+xml' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.jpg': 'image/jpeg', '.png': 'image/png', '.json': 'application/json', '.ico': 'image/x-icon', '.svg': 'image/svg+xml', '.mp4': 'video/mp4' };
 
 /* ---------- storage: Postgres (DATABASE_URL) or local JSON file ---------- */
 let store;
@@ -54,6 +54,7 @@ async function mission(req, res, url) {
     const cls = norm(body.cls), no = norm(body.no), team = norm(body.team);
     if (!cls || !no || !team) return send(res, 400, { error: 'cls, no, team required' });
     const patch = { cls, no, team, updated: Date.now() };
+    if (typeof body.name === 'string' && body.name.trim()) patch.name = body.name.trim().slice(0, 20);
     if (body.act && /^act[1-3]$/.test(body.act) && body.data && typeof body.data === 'object') patch[body.act] = { ...body.data, at: Date.now() };
     await store.kvMerge('ms:' + cls + '_' + no, patch);
     return send(res, 200, { ok: true });
@@ -103,6 +104,16 @@ const server = http.createServer(async (req, res) => {
     let p = decodeURIComponent(url.pathname); if (p === '/mission') { res.writeHead(302, { location: '/mission/' }); return res.end() } if (p.endsWith('/')) p += 'index.html';
     const file = path.normalize(path.join(PUBLIC, p));
     if (!file.startsWith(PUBLIC)) return send(res, 403, 'forbidden', 'text/plain');
+    if (path.extname(file) === '.mp4') { // 영상: Range 요청 지원 (iPad/Safari 재생용)
+      return fs.stat(file, (err, st) => {
+        if (err) return send(res, 404, 'not found', 'text/plain');
+        const m = /bytes=(\d*)-(\d*)/.exec(req.headers.range || ''); const head = { 'content-type': 'video/mp4', 'accept-ranges': 'bytes', 'cache-control': 'public, max-age=86400' };
+        if (!m) { res.writeHead(200, { ...head, 'content-length': st.size }); return fs.createReadStream(file).pipe(res) }
+        let a = m[1] ? +m[1] : st.size - +m[2], b = m[1] && m[2] ? +m[2] : st.size - 1; if (!m[1]) b = st.size - 1;
+        if (isNaN(a) || a < 0 || a >= st.size || b < a) { res.writeHead(416, { 'content-range': 'bytes */' + st.size }); return res.end() }
+        b = Math.min(b, st.size - 1); res.writeHead(206, { ...head, 'content-range': `bytes ${a}-${b}/${st.size}`, 'content-length': b - a + 1 }); fs.createReadStream(file, { start: a, end: b }).pipe(res);
+      });
+    }
     fs.readFile(file, (err, buf) => {
       if (err) return send(res, 404, 'not found', 'text/plain');
       res.writeHead(200, { 'content-type': MIME[path.extname(file)] || 'application/octet-stream', 'cache-control': p.startsWith('/img/') || p.startsWith('/lib/') || p.startsWith('/mission/media/') ? 'public, max-age=86400' : 'no-cache' });
