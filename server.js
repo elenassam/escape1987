@@ -45,6 +45,57 @@ const send = (res, code, body, type = 'application/json; charset=utf-8') => { re
 function readBody(req, limit = 300000) { return new Promise((ok, bad) => { let n = 0, chunks = []; req.on('data', c => { n += c.length; if (n > limit) { bad(new Error('too large')); req.destroy() } else chunks.push(c) }); req.on('end', () => ok(Buffer.concat(chunks).toString('utf8'))); req.on('error', bad) }) }
 const isTeacher = req => req.headers['x-teacher-pw'] === TEACHER_PW;
 
+/* ---------- AI 피드백 (Anthropic Messages API) ---------- */
+const AI_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
+const AI_SYSTEM = `당신은 한국 중학교 영어 교사의 보조 교사입니다. 학생 조가 영어로 쓴 '비밀 제보서'(외신 기자에게 보내는 짧은 제보 글)에 대한 피드백 초안을 씁니다. 교사가 읽고 고친 뒤 학생에게 보냅니다.
+
+[수업 배경 · 이 사실들만 기준으로 판단하세요]
+- 기사(1987년 1월 16일 보도): 1월 14일, 서울의 경찰 사무실(police office)에서 21세 대학생이 숨짐. 경찰은 이른 아침 집에서 학생을 데려가 친구에 대해 조사함. 경찰은 책상을 '탁' 치자 놀라 쓰러진 쇼크사(shock)라고 주장했고, 며칠 뒤 사건을 종결(closed the case)함. 신문은 'shock'이라는 말만 씀.
+- 학생들이 찾은 증거: 부검 소견에 목·가슴의 멍(bruises on his neck and chest), 폐의 출혈 반점, "질식한 것으로 보임"(asphyxia). 처음 온 의사는 바닥이 물로 흥건하고, 배가 불러 있고, 폐에서 물소리를 들음(water in the lungs). 목격자는 학생이 숨쉬기 힘들어하는 것을 봄. 신문사에 '쇼크사라고만 쓸 것'이라는 보도 지시 쪽지가 있었음.
+- 진짜 사망 원인: asphyxia(질식).
+- 1월 16일은 기사가 나온 날이고, 학생이 숨진 날은 1월 14일입니다.
+
+[제보서 다섯 칸]
+① WHAT: 언제, 어디서, 누가, 어떤 일을 당했나 (날짜는 학생이 기사에서 직접 찾아 씀)
+② POLICE CLAIM: 경찰의 주장(said/claimed/according to)과 그 뒤에 한 일
+③ TRUTH: But 또는 However로 시작, die of + 진짜 원인
+④ EVIDENCE: 진실을 보여 주는 증거 2개 이상(몸의 흔적, 의사의 관찰 등)
+⑤ WHY & REQUEST: because + 알려야 하는 이유, Please + 부탁
+
+[학생 수준] 중학생, 영어 초급(A2). 문법 용어는 최소로, 쉬운 말로.
+
+[출력 형식 · 반드시 이대로, 다른 말 없이]
+1. 구성
++ (잘한 점)
+- (고칠 점)
+2. 언어 사용
++ (잘한 점)
+- (고칠 점)
+(마지막 줄: 다음에 할 일 한 문장. 고칠 점이 없으면 "이제 완성본으로 옮겨 쓰고 전송하세요.", 있으면 "− 표시된 부분을 고친 뒤 다시 검토 요청하세요.")
+
+[작성 규칙]
+- 한국어 해요체, 따뜻하지만 구체적으로. 각 줄은 한두 문장.
+- 각 줄 앞에 칸 번호(①~⑤)를 붙일 수 있으면 붙이세요.
+- 고칠 점에는 학생이 쓴 표현을 짧게 인용하고, 고친 영어 예시를 함께 주세요. 예) - ③ "he die by asphixia" → However, he died of asphyxia. 처럼 고쳐요.
+- '구성'은 내용·순서·빠진 정보, '언어 사용'은 시제·어법·철자·대소문자·마침표·단어 선택을 다룹니다.
+- 각 부분 + 는 1~3줄, - 는 0~4줄. 정말 잘했으면 - 를 쓰지 않아도 됩니다.
+- 제보서 전체를 대신 다시 써 주지 마세요. 위 배경에 없는 사실을 지어내지 마세요.
+- 마크다운(**, #, 표)을 쓰지 마세요.`;
+async function aiFeedback(g) {
+  const L = [['CODE NAME', g.codename], ['① WHAT', g.f_s1], ['② POLICE CLAIM', g.f_s2], ['③ TRUTH', g.f_s3], ['④ EVIDENCE', g.f_s4], ['⑤ WHY & REQUEST', g.f_s5]].map(([h, v]) => `${h}: ${String(v || '').trim() || '(비어 있음)'}`).join('\n');
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: AI_MODEL, max_tokens: 1200, system: AI_SYSTEM, messages: [{ role: 'user', content: `다음은 한 조의 비밀 제보서입니다. 형식에 맞춰 피드백 초안을 써 주세요.\n\n${L}` }] }),
+    signal: AbortSignal.timeout(45000)
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j.error && j.error.message) || ('HTTP ' + r.status));
+  const t = (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('').trim();
+  if (!t) throw new Error('empty');
+  return t.replace(/\*\*/g, '').slice(0, 1500);
+}
+
 /* ---------- 2~3차시 미션 웹앱 API ---------- */
 const STUDENT_KEYS = /^(codename|final|f_[a-z0-9]{1,8}|p_\d{1,3})$/;
 async function mission(req, res, url) {
@@ -77,6 +128,12 @@ async function mission(req, res, url) {
   if (route === 'feedback' && req.method === 'POST') {
     const cls = norm(body.cls), team = norm(body.team);
     return send(res, 200, await store.kvMerge('mg:' + cls + '_' + team, { cls, team, t_feedback: String(body.feedback || '').slice(0, 1500), t_fbAt: Date.now(), status: 'feedback' }));
+  }
+  if (route === 'aifeedback' && req.method === 'POST') { // AI 피드백 초안 (교사 전용 · Render 환경변수 ANTHROPIC_API_KEY 필요)
+    if (!process.env.ANTHROPIC_API_KEY) return send(res, 501, { error: 'nokey' });
+    const g = await store.kvGet('mg:' + norm(body.cls) + '_' + norm(body.team));
+    if (!g) return send(res, 404, { error: 'nogroup' });
+    try { return send(res, 200, { feedback: await aiFeedback(g) }) } catch (e) { console.error('ai feedback', e.message); return send(res, 502, { error: 'ai', detail: String(e.message || e).slice(0, 200) }) }
   }
   if (route === 'clear' && req.method === 'POST') { const cls = norm(body.cls); if (!cls) return send(res, 400, { error: 'cls' }); return send(res, 200, { deleted: (await store.kvDel('ms:' + cls + '_')) + (await store.kvDel('mg:' + cls + '_')) }) }
   return send(res, 404, { error: 'route' });
