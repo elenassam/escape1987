@@ -43,8 +43,8 @@ td{padding:8px 10px;border-bottom:1px solid #ffffff0f}
 .g .st.review{background:#e0b04a;color:#2b2112}.g .st.feedback{background:#2f7a5a;color:#fff}.g .st.final{background:#a3261c;color:#fff}
 .g dl{display:grid;grid-template-columns:110px 1fr;gap:3px 10px;margin:0;font-size:13px}.g dt{color:#6b5a3a;font:12px var(--ft)}.g dd{margin:0;font:15px var(--ft);color:#1d2f5c;word-break:break-word}.g dd.e{color:#a08a60}
 .g textarea{width:100%;min-height:150px;margin-top:10px;background:#fffdf6;border:1px solid #2b211244;border-radius:3px;padding:8px 10px;color:#2b2112;font:14px/1.6 var(--f)}
-.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.fbk{margin-top:6px}.fbrow{display:flex;gap:8px;align-items:flex-start;margin-top:5px}.fbl{flex:0 0 74px;font:700 11px var(--f);color:#6b5a3a;padding-top:5px}.fbrow .chips{margin-top:0}.fbrow.pos .chips button{border-color:#2f7a5a66;color:#225c43;background:#2f7a5a12}.fbrow.neg .chips button{border-color:#a3261c55;color:#8a2219;background:#a3261c0d}.chips button{background:#2b21120f;border:1px solid #2b211233;color:#2b2112;border-radius:14px;padding:2px 9px;font-size:12px}
-.g .row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}.g .btn{background:#2b2112;color:#efe6cf;border-color:#2b2112}.g .sent{font-size:12px;color:#2f7a5a}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.fbk{margin-top:8px}.fbk>summary{cursor:pointer;font:700 12px var(--f);color:#6b5a3a;padding:4px 0}.fbrow .chips button{text-align:left}.fbrow{display:flex;gap:8px;align-items:flex-start;margin-top:5px}.fbl{flex:0 0 74px;font:700 11px var(--f);color:#6b5a3a;padding-top:5px}.fbrow .chips{margin-top:0}.fbrow.pos .chips button{border-color:#2f7a5a66;color:#225c43;background:#2f7a5a12}.fbrow.neg .chips button{border-color:#a3261c55;color:#8a2219;background:#a3261c0d}.chips button{background:#2b21120f;border:1px solid #2b211233;color:#2b2112;border-radius:14px;padding:2px 9px;font-size:12px}
+.g .row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}.g .btn{background:#2b2112;color:#efe6cf;border-color:#2b2112}.g .btn.auto{background:#f3e7c4;color:#2b2112;border-color:#c9a86a}.g .sent{font-size:12px;color:#2f7a5a}
 .g .final{background:#fffdf6;border:1px dashed #2b211255;padding:10px;margin-top:10px;font:15px/1.6 var(--ft);color:#1d2f5c}
 .gate{max-width:380px;margin:12vh auto;text-align:center}.gate input{width:100%;padding:12px;font:600 22px var(--fm);text-align:center;background:#0b100f;border:1px solid var(--brass);border-radius:4px;margin:14px 0}
 .err{color:var(--bad)}
@@ -74,10 +74,39 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const FB_HEAD = ['', '1. 구성', '2. 언어 사용'];
 const FB_TPL = '1. 구성\n+ \n- \n2. 언어 사용\n+ \n- ';
 const FB_SETS = [
-  [1, '+', '구성 +', ['다섯 칸(사건·주장·진실·증거·요청)을 모두 채웠어요.', '주장과 진실을 But/However로 잘 나눴어요.', '증거를 2개 이상 정확하게 썼어요.', '날짜·장소를 기사에서 정확히 찾아 썼어요.', '부탁(Please)으로 분명하게 마무리했어요.']],
-  [1, '-', '구성 −', ['① 날짜와 장소를 기사에서 찾아 넣으세요.', '② 경찰이 주장한 내용과 그 뒤에 한 일을 쓰세요.', '③을 But이나 However로 시작해 주장과 진실을 나누세요.', '④ 몸에 남은 증거를 2개 이상 쓰세요. (활동 3 참고)', '⑤ because 뒤에 세상이 알아야 하는 이유를 쓰세요.']],
-  [2, '+', '언어 사용 +', ['과거시제(died, said)를 정확하게 썼어요.', 'died of + 원인을 바르게 썼어요.', 'claimed / according to로 경찰의 말을 잘 전했어요.', '문장이 짧고 분명해요.']],
-  [2, '-', '언어 사용 −', ['지난 일은 과거시제(died, said)로 써요.', 'died of 다음에는 사망 원인을 쓰세요.', '주어와 동사가 있는 완전한 문장으로 써요.', '문장 첫 글자는 대문자, 끝에는 마침표를 찍어요.', '철자를 단어장에서 확인해 보세요.']],
+  [1, '+', '구성 +', [
+    '① 날짜(January 14, 1987)·장소(a police office in Seoul)·사건을 한 문장에 정확히 담았어요.',
+    '② 경찰의 주장(died of shock)과 그 뒤에 한 일(closed the case)을 모두 썼어요.',
+    '③ However로 시작해 경찰의 주장과 진실(asphyxia)을 분명하게 나눴어요.',
+    '④ 몸에 남은 흔적(bruises on his neck and chest)과 의사의 관찰(water in the lungs)처럼 증거를 2개 이상 들었어요.',
+    '⑤ because로 알려야 하는 이유를 밝히고, Please로 기자에게 할 일을 분명히 부탁했어요.',
+    '사건 → 주장 → 진실 → 증거 → 부탁 순서로 이어져서 처음 읽는 기자도 이해하기 쉬워요.']],
+  [1, '-', '구성 −', [
+    '① 날짜가 빠졌어요. 기사 1문단 첫 문장에서 학생이 숨진 날짜를 찾아 On January 14, 1987, 처럼 쓰세요. (1월 16일은 기사가 나온 날이에요)',
+    '① 장소가 빠졌어요. 어디에서 숨졌는지 at a police office in Seoul 을 넣으세요.',
+    '② 경찰이 무엇이라고 주장했는지 The police claimed (that) he died of shock. 처럼 쓰세요.',
+    '② 경찰이 그 뒤에 한 일도 쓰세요. 예) They closed the case a few days later.',
+    '③ But이나 However로 시작해야 경찰의 주장과 진실이 나뉘어 보여요. 예) However, he died of asphyxia.',
+    '③ 진짜 사망 원인이 빠졌어요. died of 뒤에 asphyxia(질식)를 쓰세요.',
+    '④ 증거가 1개뿐이에요. 단서 수첩·활동 3을 보고 하나 더 쓰세요. 예) There were bruises on his neck and chest. / The doctor heard water in the lungs.',
+    '④ “이상하다”는 느낌이 아니라 기록(부검 결과, 의사의 관찰)에서 나온 증거를 쓰세요.',
+    '⑤ 왜 세상이 알아야 하는지 because 뒤에 이유를 문장으로 쓰세요. 예) because the truth is hidden.',
+    '⑤ 기자에게 무엇을 해 달라는지 Please로 부탁하세요. 예) Please tell the world the truth.']],
+  [2, '+', '언어 사용 +', [
+    '지난 일을 과거시제(died, claimed, closed, heard)로 정확하게 썼어요.',
+    'die of + 원인(died of asphyxia) 표현을 바르게 썼어요.',
+    'claimed / according to 로 경찰이 한 말이라는 것을 분명히 했어요.',
+    '단어장의 낱말(autopsy, bruises, lungs, evidence)을 알맞게 골라 썼어요.',
+    '문장이 짧고 분명해서 한 번에 읽혀요.',
+    '대문자와 마침표를 빠짐없이 지켰어요.']],
+  [2, '-', '언어 사용 −', [
+    '지난 일은 과거시제로 써요. die → died, say → said, claim → claimed, close → closed',
+    'died of 다음에는 사망 원인(명사)이 와요. died of shock / died of asphyxia (died by, died for X)',
+    '주어와 동사가 있는 완전한 문장으로 써요. 예) Bruises on his neck. (X) → There were bruises on his neck. (O)',
+    '문장 첫 글자는 대문자, 끝에는 마침표(.)를 찍어요.',
+    '철자를 단어장에서 확인하세요. 예) asphyxia, autopsy, bruises, lungs',
+    '한글이 섞여 있어요. 모든 칸을 영어로 써 주세요.',
+    '여러 개를 나열할 때는 and로 이어요. 예) on his neck and chest']],
 ];
 const FB_END = ['이제 완성본으로 옮겨 쓰고 전송하세요.', '고친 뒤 다시 검토 요청하세요.'];
 function fbAdd(val, sec, sign, text) {
@@ -91,11 +120,62 @@ function fbAdd(val, sec, sign, text) {
   if (at < 0) at = sign === '+' ? h : end - 1;
   L.splice(at + 1, 0, sign + ' ' + text); return L.join('\n');
 }
+/* 자동 피드백 초안 (규칙 기반 · 교사가 확인·수정 후 보내기) */
+function fbAuto(g) {
+  const T = k => String(g[k] || '').trim(), low = k => T(k).toLowerCase(), all = ['f_s1', 'f_s2', 'f_s3', 'f_s4', 'f_s5'].map(T).join(' ');
+  const P1 = [], M1 = [], P2 = [], M2 = [];
+  const nums = ['①', '②', '③', '④', '⑤']; ['f_s1', 'f_s2', 'f_s3', 'f_s4', 'f_s5'].forEach((k, i) => { if (!T(k)) M1.push(`${nums[i]} 칸이 비어 있어요. 질문에 답하는 영어 문장을 1~2개 쓰세요.`) });
+  // ① 사건
+  if (T('f_s1')) { const date = /january\s*14|1\.\s*14|jan\.?\s*14/.test(low('f_s1')), wrongDate = /january\s*16/.test(low('f_s1')), place = /police office|seoul/.test(low('f_s1'));
+    if (wrongDate) M1.push('① 1월 16일은 기사가 나온 날이에요. 학생이 숨진 날짜는 1문단 첫 문장(January 14)을 보세요.');
+    else if (!date) M1.push('① 날짜가 빠졌어요. 기사 1문단 첫 문장에서 학생이 숨진 날짜를 찾아 On January 14, 1987, 처럼 쓰세요.');
+    if (!place) M1.push('① 장소가 빠졌어요. 어디에서 숨졌는지 at a police office in Seoul 을 넣으세요.');
+    if (date && place && !wrongDate) P1.push('① 날짜·장소·사건을 한 문장에 정확히 담았어요.') }
+  // ② 경찰 주장
+  if (T('f_s2')) { const rep = /claim|said|says|according to/.test(low('f_s2')), shock = /shock/.test(low('f_s2')), closed = /clos/.test(low('f_s2'));
+    if (rep && shock) P1.push('② claimed / according to 로 경찰의 주장(died of shock)을 분명히 전했어요.'); else if (!shock) M1.push('② 경찰이 무엇이라고 주장했는지 The police claimed (that) he died of shock. 처럼 쓰세요.'); else M1.push('② 경찰이 한 말이라는 것을 claimed / said / According to the police 로 밝혀 주세요.');
+    if (closed) P1.push('② 경찰이 그 뒤에 한 일(closed the case)까지 썼어요.'); else M1.push('② 경찰이 그 뒤에 한 일도 쓰세요. 예) They closed the case a few days later.') }
+  // ③ 진실
+  if (T('f_s3')) { const turn = /^(but|however)\b/i.test(T('f_s3')), asp = /asph|aspyx|suffocat|chok/.test(low('f_s3'));
+    if (turn && asp) P1.push('③ However로 시작해 경찰의 주장과 진실(asphyxia)을 분명하게 나눴어요.');
+    if (!turn) M1.push('③ But이나 However로 시작해야 경찰의 주장과 진실이 나뉘어 보여요. 예) However, he died of asphyxia.');
+    if (!asp) M1.push('③ 진짜 사망 원인이 빠졌어요. died of 뒤에 asphyxia(질식)를 쓰세요.') }
+  // ④ 증거
+  if (T('f_s4')) { const t = low('f_s4'); const ev = [/bruise|neck|chest/.test(t), /water|lung/.test(t), /bleed|blood spot/.test(t), /autopsy|suggest|finding/.test(t), /floor|wet/.test(t), /breath|witness/.test(t)].filter(Boolean).length;
+    if (ev >= 2) P1.push('④ 몸에 남은 흔적·의사의 관찰처럼 서로 다른 증거를 2개 이상 들었어요.'); else M1.push('④ 증거가 1개뿐이에요. 단서 수첩·활동 3을 보고 하나 더 쓰세요. 예) There were bruises on his neck and chest. / The doctor heard water in the lungs.') }
+  // ⑤ 이유·부탁
+  if (T('f_s5')) { const bc = /because/.test(low('f_s5')), pl = /please/.test(low('f_s5'));
+    if (bc && pl) P1.push('⑤ because로 이유를 밝히고, Please로 기자에게 할 일을 분명히 부탁했어요.');
+    if (!bc) M1.push('⑤ 왜 세상이 알아야 하는지 because 뒤에 이유를 문장으로 쓰세요. 예) because the truth is hidden.');
+    if (!pl) M1.push('⑤ 기자에게 무엇을 해 달라는지 Please로 부탁하세요. 예) Please tell the world the truth.') }
+  if (!M1.length && P1.length >= 4) P1.push('사건 → 주장 → 진실 → 증거 → 부탁 순서로 이어져서 처음 읽는 기자도 이해하기 쉬워요.');
+  // 언어 사용
+  if (all.trim()) {
+    if (/[가-힣]/.test(all)) M2.push('한글이 섞여 있어요. 모든 칸을 영어로 써 주세요.');
+    const tense = []; const L = ' ' + all.toLowerCase() + ' ';
+    [['dies', 'died'], ['die of', 'died of'], ['says', 'said'], ['claims', 'claimed'], ['closes', 'closed'], ['hears', 'heard'], ['close the case', 'closed the case']].forEach(([w, r]) => { if (new RegExp('(?<!did not |didn.t |to |will |can |could )\\b' + w.replace(/ /g, '\\s+') + '\\b').test(L)) tense.push(`${w} → ${r}`) });
+    if (/\b(he|she|they|police|student|doctor)\s+(die|say|claim|close|hear|take)\b/.test(L)) tense.push('동사 원형 → 과거형');
+    if (tense.length) M2.push('지난 일은 과거시제로 써요. ' + [...new Set(tense)].slice(0, 4).join(', '));
+    else if (/\b(died|claimed|closed|heard|said|took)\b/.test(L)) P2.push('지난 일을 과거시제(died, claimed, closed, heard)로 정확하게 썼어요.');
+    if (/died\s+(by|for|from|with)\s+\w+/.test(L)) M2.push('사망 원인은 died of 로 써요. died by / died for (X) → died of asphyxia (O)');
+    else if (/died\s+of\s+(shock|asphyxia)/.test(L)) P2.push('die of + 원인(died of asphyxia) 표현을 바르게 썼어요.');
+    const sents = all.split(/(?<=[.!?])\s+/).map(x => x.trim()).filter(Boolean);
+    const noCap = sents.filter(x => /^[a-z]/.test(x)).length, noDot = ['f_s1', 'f_s2', 'f_s3', 'f_s4', 'f_s5'].filter(k => T(k) && !/[.!?]["”’)]?$/.test(T(k))).length;
+    if (noCap || noDot) M2.push(`문장 첫 글자는 대문자, 끝에는 마침표(.)를 찍어요.${noCap ? ` (소문자로 시작한 문장 ${noCap}개)` : ''}${noDot ? ` (마침표 없는 칸 ${noDot}개)` : ''}`);
+    else P2.push('대문자와 마침표를 빠짐없이 지켰어요.');
+    const typo = [['asphixia', 'asphyxia'], ['asphyxa', 'asphyxia'], ['aspyxia', 'asphyxia'], ['autopcy', 'autopsy'], ['autopsi', 'autopsy'], ['bruses', 'bruises'], ['bruis ', 'bruise '], ['lung ', 'lungs '], ['polise', 'police'], ['univercity', 'university'], ['januray', 'January'], ['evidance', 'evidence'], ['shok ', 'shock ']].filter(([w]) => L.includes(w)).map(([w, r]) => `${w.trim()} → ${r.trim()}`);
+    if (typo.length) M2.push('철자를 단어장에서 확인하세요. ' + typo.slice(0, 4).join(', '));
+    const used = ['autopsy', 'bruises', 'lungs', 'evidence', 'asphyxia', 'according to', 'claimed'].filter(w => L.includes(w)); if (used.length >= 3 && !typo.length) P2.push(`단어장의 낱말(${used.slice(0, 4).join(', ')})을 알맞게 골라 썼어요.`);
+  }
+  const out = ['1. 구성', ...P1.map(x => '+ ' + x), ...M1.map(x => '- ' + x), '2. 언어 사용', ...P2.map(x => '+ ' + x), ...M2.map(x => '- ' + x)];
+  out.push(M1.length || M2.length ? '− 표시된 부분을 고친 뒤 다시 검토 요청하세요.' : '이제 완성본으로 옮겨 쓰고 전송하세요.');
+  return out.join('\n');
+}
 function fbClean(v) { // 빈 + / - 줄과 내용 없는 제목 지우기
   const L = String(v || '').split('\n').map(x => x.replace(/\s+$/, '')).filter(x => !/^[+-]$/.test(x.trim()));
   return L.filter((x, i) => !(/^\d\.\s/.test(x) && (i + 1 >= L.length || /^\d\.\s/.test(L[i + 1]) || !L[i + 1].trim()))).join('\n').trim();
 }
-let PW = sessionStorage.getItem('m87pw') || '', DATA = { students: [], groups: [] }, tab = '', sortKey = 'no', drafts = {}, sentAt = {};
+let openBank = {}, PW = sessionStorage.getItem('m87pw') || '', DATA = { students: [], groups: [] }, tab = '', sortKey = 'no', drafts = {}, sentAt = {};
 const H = () => ({ 'x-teacher-pw': PW, 'content-type': 'application/json' });
 async function fetchAll() { const r = await fetch('/api/m/all', { headers: H(), cache: 'no-store' }); if (r.status === 401) throw 401; if (!r.ok) throw r.status; return r.json() }
 $('#gf').onsubmit = async e => { e.preventDefault(); PW = $('#pw').value; try { DATA = await fetchAll(); sessionStorage.setItem('m87pw', PW); start() } catch (x) { $('#ge').textContent = x === 401 ? '비밀번호가 맞지 않아요.' : '서버에 연결하지 못했어요.' } };
@@ -126,13 +206,15 @@ function drawGroups(G, S = []) {
     <dl>${D.tip.map(t => `<dt>${t.h}</dt><dd class="${g[t.k] ? '' : 'e'}">${g[t.k] ? esc(g[t.k]) : '(아직 안 씀)'}</dd>`).join('')}</dl>
     ${st === 'final' ? `<div class="final"><b style="font:700 11px var(--f);color:#a3261c">전송한 완성본 · ${wc}단어</b><br>${esc(g.final)}</div>` : g.final ? `<div class="final" style="opacity:.75"><b style="font:700 11px var(--f);color:#6b5a3a">작성 중인 완성본 · ${wc}단어</b><br>${esc(g.final)}</div>` : ''}
     ${st !== 'final' ? `<textarea data-g="${id}" placeholder="이 조에 보낼 피드백을 쓰세요">${esc(drafts[id] ?? g.t_feedback ?? FB_TPL)}</textarea>
-    <div class="fbk">${FB_SETS.map(([sec, sign, lab, list]) => `<div class="fbrow ${sign === '+' ? 'pos' : 'neg'}"><span class="fbl">${lab}</span><div class="chips">${list.map(c => `<button data-add="${id}" data-sec="${sec}" data-sign="${sign}">${sign} ${c}</button>`).join('')}</div></div>`).join('')}<div class="fbrow"><span class="fbl">마무리</span><div class="chips">${FB_END.map(c => `<button data-add="${id}" data-sec="0" data-sign="">${c}</button>`).join('')}</div></div></div>
-    <div class="row"><button class="btn" data-send="${id}">피드백 보내기</button><span class="sent">${g.t_fbAt ? '보낸 시각 ' + new Date(g.t_fbAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}</span></div>` : `<p class="note" style="color:#6b5a3a;margin:8px 0 0">보낸 피드백: ${esc(g.t_feedback || '-')}</p>`}</article>` }).join('');
+    <details class="fbk"${openBank[id] ? ' open' : ''} data-bank="${id}"><summary>피드백 문구 고르기 (구성·언어 사용 / + 잘한 점 · − 고칠 점)</summary>${FB_SETS.map(([sec, sign, lab, list]) => `<div class="fbrow ${sign === '+' ? 'pos' : 'neg'}"><span class="fbl">${lab}</span><div class="chips">${list.map(c => `<button data-add="${id}" data-sec="${sec}" data-sign="${sign}">${sign} ${c}</button>`).join('')}</div></div>`).join('')}<div class="fbrow"><span class="fbl">마무리</span><div class="chips">${FB_END.map(c => `<button data-add="${id}" data-sec="0" data-sign="">${c}</button>`).join('')}</div></div></details>
+    <div class="row"><button class="btn auto" data-auto="${id}" type="button">⚡ 자동 피드백 초안</button><button class="btn" data-send="${id}">피드백 보내기</button><span class="sent">${g.t_fbAt ? '보낸 시각 ' + new Date(g.t_fbAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}</span></div>` : `<p class="note" style="color:#6b5a3a;margin:8px 0 0">보낸 피드백: ${esc(g.t_feedback || '-')}</p>`}</article>` }).join('');
   if (active) { // keep the textarea being typed in
     const keepVal = drafts[active]; host.innerHTML = html; const ta = host.querySelector(`textarea[data-g="${active}"]`); if (ta) { ta.value = keepVal ?? ta.value; ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length }
   } else host.innerHTML = html;
   host.querySelectorAll('textarea').forEach(t => t.oninput = () => drafts[t.dataset.g] = t.value);
   host.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { const id = b.dataset.add, t = host.querySelector(`textarea[data-g="${id}"]`); t.value = fbAdd(t.value, +b.dataset.sec, b.dataset.sign, b.textContent.replace(/^[+-] /, '')); drafts[id] = t.value; t.focus() });
+  host.querySelectorAll('[data-bank]').forEach(d => d.ontoggle = () => { openBank[d.dataset.bank] = d.open });
+  host.querySelectorAll('[data-auto]').forEach(b => b.onclick = () => { const id = b.dataset.auto, g = DATA.groups.find(x => x.cls + '_' + x.team === id), t = host.querySelector(`textarea[data-g="${id}"]`); if (!g || !t) return; const cur = fbClean(t.value); if (cur && !confirm('지금 쓴 피드백을 자동 초안으로 바꿀까요?')) return; t.value = fbAuto(g); drafts[id] = t.value; t.focus() });
   host.querySelectorAll('[data-send]').forEach(b => b.onclick = async () => { const id = b.dataset.send, [cls, team] = id.split('_'), t = host.querySelector(`textarea[data-g="${id}"]`); if (!fbClean(t.value)) { t.focus(); return } b.disabled = true; await fetch('/api/m/feedback', { method: 'POST', headers: H(), body: JSON.stringify({ cls, team, feedback: fbClean(t.value) }) }); delete drafts[id]; DATA = await fetchAll(); draw() });
 }
 const COLS = [['no', '번호'], ['name', '이름'], ['team', '조'], ['a1', '활동 1 형광펜'], ['a2', '활동 2 T/F'], ['a3', '활동 3 증거'], ['up', '마지막 활동']];
