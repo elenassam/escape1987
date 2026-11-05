@@ -157,6 +157,12 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'DELETE') { const cls = norm(url.searchParams.get('cls')); if (!cls) return send(res, 400, { error: 'cls' }); return send(res, 200, { deleted: await store.delCls(cls) }) }
       return send(res, 405, { error: 'method' });
     }
+    if (url.pathname === '/api/progress/one' && req.method === 'GET') { // 학생 이어서 하기: 반·번호·이름이 모두 맞을 때만 내 기록을 돌려줌
+      const cls = norm(url.searchParams.get('cls')), no = norm(url.searchParams.get('no')), name = String(url.searchParams.get('name') || '').trim();
+      if (!cls || !no || !name) return send(res, 400, { error: 'cls, no, name required' });
+      const r = (await store.all()).find(x => norm(x.cls) === cls && norm(x.no) === no && String(x.name || '').trim() === name);
+      return r ? send(res, 200, r) : send(res, 404, { error: 'none' });
+    }
     if (url.pathname.startsWith('/api/m/')) return mission(req, res, url);
     // static files
     let p = decodeURIComponent(url.pathname); if (p === '/mission') { res.writeHead(302, { location: '/mission/' }); return res.end() } if (p.endsWith('/')) p += 'index.html';
