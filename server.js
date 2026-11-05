@@ -102,7 +102,10 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname.startsWith('/api/m/')) return mission(req, res, url);
     // static files
     let p = decodeURIComponent(url.pathname); if (p === '/mission') { res.writeHead(302, { location: '/mission/' }); return res.end() } if (p.endsWith('/')) p += 'index.html';
-    const file = path.normalize(path.join(PUBLIC, p));
+    let file = path.normalize(path.join(PUBLIC, p));
+    if (p === '/video/prologue.mp4' && !fs.existsSync(file)) { // 업로드된 영상 이름이 달라도 재생되게
+      try { const v = fs.readdirSync(path.join(PUBLIC, 'video')).find(n => n.toLowerCase().endsWith('.mp4')); if (v) file = path.join(PUBLIC, 'video', v); } catch (e) {}
+    }
     if (!file.startsWith(PUBLIC)) return send(res, 403, 'forbidden', 'text/plain');
     if (path.extname(file) === '.mp4') { // 영상: Range 요청 지원 (iPad/Safari 재생용)
       return fs.stat(file, (err, st) => {
