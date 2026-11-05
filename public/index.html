@@ -35,6 +35,15 @@ button{cursor:pointer}
 .hs.done .lab{display:none}
 .hs.nav .ring{background:#0d1312cc;color:var(--teal);border:2px solid var(--teal);box-shadow:0 0 0 4px #7fa39c30;animation:none;font-size:18px}
 .hs.nav .lab{display:block;border-color:#7fa39c66}
+.ar{display:inline-block;font-style:normal}.ar.l{transform:scaleX(-1)}
+.edgenav{position:absolute;top:50%;transform:translateY(-50%);pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;padding:0;cursor:pointer}
+.edgenav.r{right:14px}.edgenav.l{left:14px}
+.edgenav .ar{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-size:24px;color:var(--teal);background:#0d1312cc;border:2px solid var(--teal);box-shadow:0 0 0 4px #7fa39c30;transition:transform .2s}
+.edgenav.l .ar{transform:scaleX(-1)}
+.edgenav.r:hover .ar{transform:translateX(4px)}.edgenav.l:hover .ar{transform:scaleX(-1) translateX(4px)}
+.edgenav .lab{font-size:12px;background:#0d1312d9;border:1px solid #7fa39c66;padding:3px 9px;border-radius:3px;white-space:nowrap;color:var(--fg)}
+.edgenav.next .ar{color:var(--ink);background:var(--teal);animation:pulse2 1.6s ease-in-out infinite}
+@media (max-width:600px){.edgenav.r{right:6px}.edgenav.l{left:6px}.edgenav .lab{font-size:11px;max-width:96px;white-space:normal;text-align:center}}
 .hs.nav.next .ring{color:var(--ink);background:var(--teal);animation:pulse2 1.6s ease-in-out infinite}
 @keyframes pulse2{50%{box-shadow:0 0 0 10px #7fa39c22,0 0 30px #7fa39ccc}}
 .hs.door .ring{background:var(--stamp);color:#fff;box-shadow:0 0 0 4px #b5402f44,0 0 26px #b5402faa}
@@ -706,7 +715,7 @@ const World = (() => {
 let renderer, scene, cam, mat, dust, IM = {}, roomIndex = 0, enabled = false;
 const R = 10, T = 2.6, ASP = 2400 / 1029, H = R * T / ASP, N = 520;
 let yaw = 0, pitch = 0, tYaw = 0, tPitch = 0, yawMax = 0, pitchMax = 0, mx = 0, my = 0, flick = 1;
-let stateFn = () => 'locked', onPick = () => {}, promptCb = () => {}, onNav = () => {}, navHot = () => false, viewIndex = 0, fovAnim = null, baseFov = 50;
+let edges = [], stateFn = () => 'locked', onPick = () => {}, promptCb = () => {}, onNav = () => {}, navHot = () => false, viewIndex = 0, fovAnim = null, baseFov = 50;
 const keys = {}, virt = {}, tex = {};
 let spots = [], hot, dv;
 const clamp = (v, a) => Math.max(-a, Math.min(a, v));
@@ -752,7 +761,8 @@ function build(i, vi = 0) {
   hot.innerHTML = ''; spots = [];
   Object.entries(view.spots || {}).forEach(([id, [u, v]]) => { const b = document.createElement('button'); b.className = 'hs'; b.dataset.id = id; b.innerHTML = `<span class="ring">${id}</span><span class="lab">${Q[id].obj}</span>`; b.onclick = () => onPick(id, true); hot.appendChild(b); spots.push({ b, p: uvToWorld(u, v), id, u }) });
   if (view.door) { const d = document.createElement('button'); d.className = 'hs door'; d.dataset.id = 'door'; d.innerHTML = `<span class="ring">${i === 4 ? '열쇠' : '문'}</span><span class="lab">${i === 4 ? '금고 문 · 다섯 글자 잠금' : '다음 공간으로 가는 문'}</span>`; d.onclick = () => onPick('door', true); hot.appendChild(d); spots.push({ b: d, p: uvToWorld(view.door[0], view.door[1]), id: 'door', u: view.door[0] }) }
-  (view.nav || []).forEach(([to, u, v]) => { const b = document.createElement('button'); b.className = 'hs nav'; b.dataset.id = 'nav' + to; b.innerHTML = `<span class="ring">➜</span><span class="lab">${rm.views[to].name}(으)로 가기</span>`; b.onclick = () => onNav(to); hot.appendChild(b); spots.push({ b, p: uvToWorld(u, v), id: 'nav' + to, u, nav: to }) });
+  (view.nav || []).forEach(([to, u, v]) => { const b = document.createElement('button'); b.className = 'hs nav'; b.dataset.id = 'nav' + to; b.innerHTML = `<span class="ring"><i class="ar${u < 50 ? ' l' : ''}">➜</i></span><span class="lab">${rm.views[to].name}(으)로 가기</span>`; b.onclick = () => onNav(to); hot.appendChild(b); spots.push({ b, p: uvToWorld(u, v), id: 'nav' + to, u, nav: to }) });
+  edges = []; if (vi > 0) rm.views.forEach((v, to) => { if (to === 0 || to === vi) return; const side = to > vi ? 'r' : 'l'; const b = document.createElement('button'); b.className = 'edgenav ' + side; b.innerHTML = `<i class="ar${side === 'l' ? ' l' : ''}">➜</i><span class="lab">${v.name}</span>`; b.setAttribute('aria-label', v.name + '(으)로 가기'); b.onclick = () => onNav(to); hot.appendChild(b); edges.push({ b, to }) }); // 옆 장면으로 바로 넘어가는 화면 가장자리 화살표
   const first = spots.find(s => s.nav != null ? navHot(s.nav) : stateFn(s.id) === 'next' || stateFn(s.id) === 'door');
   tYaw = yaw = first ? yawFor(first.u) * .7 : 0; tPitch = pitch = 0;
   refreshMarkers();
@@ -762,7 +772,7 @@ function moveTo(cb, u) { // short "walking" zoom toward a point, then swap view
   fovAnim = { a: cam.fov, b: cam.fov * .62, t0: performance.now(), d: 420, done: () => { cb(); cam.fov = baseFov * .8; cam.updateProjectionMatrix(); fovAnim = { a: cam.fov, b: baseFov, t0: performance.now(), d: 380 } } };
   const bl = document.getElementById('blink'); if (bl) { bl.style.transition = 'opacity .35s'; bl.style.opacity = 1; setTimeout(() => { bl.style.opacity = 0 }, 470) }
 }
-function refreshMarkers() { spots.forEach(s => { if (s.nav != null) { s.b.classList.toggle('next', navHot(s.nav)); return } const st = stateFn(s.id); s.b.classList.toggle('done', st === 'done'); s.b.classList.toggle('locked', st === 'locked'); s.b.classList.toggle('next', st === 'next'); s.b.setAttribute('aria-label', s.id === 'door' ? (st === 'locked' ? '문 (잠김)' : '문') : `${s.id} ${Q[s.id].obj}${st === 'done' ? ' (해결)' : st === 'locked' ? ' (잠김)' : ''}`) }) }
+function refreshMarkers() { edges.forEach(e => e.b.classList.toggle('next', navHot(e.to))); spots.forEach(s => { if (s.nav != null) { s.b.classList.toggle('next', navHot(s.nav)); return } const st = stateFn(s.id); s.b.classList.toggle('done', st === 'done'); s.b.classList.toggle('locked', st === 'locked'); s.b.classList.toggle('next', st === 'next'); s.b.setAttribute('aria-label', s.id === 'door' ? (st === 'locked' ? '문 (잠김)' : '문') : `${s.id} ${Q[s.id].obj}${st === 'done' ? ' (해결)' : st === 'locked' ? ' (잠김)' : ''}`) }) }
 const v3 = new THREE.Vector3();
 let lastNear = null;
 function nearest() { // hotspot closest to the screen centre
@@ -804,7 +814,7 @@ const $ = s => document.querySelector(s), el = (t, c, h) => { const e = document
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ORDER = Object.keys(Q);
 let TEACHER = location.hash === '#teacher';
-let DEMO = false; // 교사 시연 모드: 0반 0번 수소티 → 서버 전송 없음, 정답 채우기 버튼
+let DEMO = false; // 교사 시연 모드: 0반 0번 수소티 → 0반으로 교사 화면에 전송, 정답 채우기 버튼
 const TEACHER_PW = '7891';
 const LS = 'esc87v2_';
 const SCI = new Set(['1-3', '2-1', '2-2', '2-3', '2-4', '2-5', '3-1', '3-4', '3-5', '4-4', '5-1', '5-2', '5-3', '5-4', '5-5']);
@@ -814,7 +824,7 @@ let S = null;
 function fresh(cls, no, name) { return { cls, no, name, room: 0, solved: {}, clues: [], hints: 0, wrong: 0, t0: Date.now(), cleared: [], done: false, signed: false, signName: '', signedAt: 0, nb: emptyNb(), seenTip: 0 } }
 function emptyNb() { return { summary: '', claim: '', conf: '', ev: [{ t: '', m: '' }, { t: '', m: '' }, { t: '', m: '' }], sci: '', hide: '', en: '' } }
 const skey = (cls, no) => cls + '_' + no;
-function save() { if (!S) return; S.lastAt = Date.now(); if (DEMO) return; try { localStorage.setItem(LS + skey(S.cls, S.no), JSON.stringify(S)); localStorage.setItem(LS + 'last', skey(S.cls, S.no)) } catch (e) { } Sync.push() }
+function save() { if (!S) return; S.lastAt = Date.now(); if (DEMO) { Sync.push(); return } try { localStorage.setItem(LS + skey(S.cls, S.no), JSON.stringify(S)); localStorage.setItem(LS + 'last', skey(S.cls, S.no)) } catch (e) { } Sync.push() }
 function load(no) { try { const s = JSON.parse(localStorage.getItem(LS + no) || 'null'); return s && typeof s.room === 'number' ? s : null } catch (e) { return null } }
 
 /* ---------------- sync (db) ---------------- */
@@ -852,7 +862,7 @@ function safeId(s) { return String(s).replace(/[^0-9A-Za-z_-]/g, '_').slice(0, 4
 function summary(st = S, upd = Date.now()) {
   return { cls: st.cls || '', no: st.no, name: st.name, room: st.room, solved: Object.keys(st.solved).filter(k => st.solved[k] === 1), revealed: Object.keys(st.solved).filter(k => st.solved[k] === 'r'), hints: st.hints, wrong: st.wrong, t0: st.t0, updated: upd, done: !!st.done, cleared: st.cleared, signed: !!st.signed, signName: st.signName || '', signedAt: st.signedAt || 0, nb: st.nb };
 }
-function badge() { const b = $('#who'); if (!b || !S) return; if (DEMO) { b.innerHTML = `<b>교사 시연 모드</b><span class="sync err" title="선생님 화면으로 보내지 않아요">기록 안 남김</span>`; return } const st = Sync.state; b.innerHTML = `<b>${esc(S.cls)}반 ${esc(S.no)}번 ${esc(S.name)}</b><span class="sync ${st === 'on' ? 'on' : st === 'err' ? 'err' : 'off'}" title="${st === 'on' ? '진행 상황이 선생님 화면에 보내지고 있어요' : st === 'err' ? '선생님 화면에 보내지 못했어요. 이 기기에는 저장돼요' : '이 기기에만 저장돼요'}">${st === 'on' ? '● 전송 중' : st === 'err' ? '전송 안 됨' : '이 기기 저장'}</span>` }
+function badge() { const b = $('#who'); if (!b || !S) return; const st = Sync.state; b.innerHTML = `<b>${DEMO ? '교사 시연 모드 · 0반' : esc(S.cls) + '반 ' + esc(S.no) + '번 ' + esc(S.name)}</b><span class="sync ${st === 'on' ? 'on' : st === 'err' ? 'err' : 'off'}" title="${st === 'on' ? '진행 상황이 선생님 화면에 보내지고 있어요' : st === 'err' ? '선생님 화면에 보내지 못했어요. 이 기기에는 저장돼요' : '이 기기에만 저장돼요'}">${st === 'on' ? '● 전송 중' : st === 'err' ? '전송 안 됨' : '이 기기 저장'}</span>` }
 
 /* ---------------- 3D world ---------------- */
 const imgEls = {};
