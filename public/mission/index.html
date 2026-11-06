@@ -354,7 +354,7 @@ function render() {
     <div class="dossier"><span class="ts">TOP SECRET</span><h2>SECRET TIP</h2><div style="font:15px var(--f-type)">TO: Foreign Reporter, Global Truth News · SECURE DROP 2026</div>
     <div class="fld" style="margin-top:14px"><label style="font:15px var(--f-type)">CODE NAME: <input class="codename" data-k="codename" maxlength="30" placeholder="우리 조 이름 (영어로)"></label></div>
     <table class="tipt"><tbody>${D.tip.map(t => `<tr><th>${t.h}</th><td><div class="q">${t.q}</div><div class="need">✓ ${t.need}</div><div class="fld"><textarea class="tw" data-k="${t.k}" maxlength="400" rows="2" aria-label="${t.h}" placeholder="영어로 1~2문장"></textarea></div><div class="starters">${t.starters.map(x => `<button type="button" data-ins="${t.k}">${esc(x)}</button>`).join('')}</div></td></tr>`).join('')}</tbody></table>
-    <p style="font:13px var(--f-kr);color:#6b5a3a;margin:10px 0 0">표 전체 <b id="tcount">0</b>단어 · 완성본은 CODE NAME을 빼고 70단어 이내예요.</p></div>
+    <p style="font:13px var(--f-kr);color:#6b5a3a;margin:10px 0 0">표 전체 <b id="tcount">0</b>단어 · 완성본은 CODE NAME을 빼고 100단어 이내예요.</p></div>
     <div class="actions"><span class="status" id="st"></span><button class="btn primary" id="rev">선생님께 검토 요청</button><span class="msg" id="rm"></span></div>
     <div id="after"></div>`;
     g.querySelectorAll('[data-ins]').forEach(b => b.onclick = () => { const t = g.querySelector(`[data-k="${b.dataset.ins}"]`); const pos = t.selectionStart ?? t.value.length; const ins = (pos && !/\s$/.test(t.value.slice(0, pos)) ? ' ' : '') + b.textContent + ' '; t.value = t.value.slice(0, pos) + ins + t.value.slice(pos); t.focus(); t.selectionStart = t.selectionEnd = pos + ins.length; t.oninput() });
@@ -375,21 +375,21 @@ function render() {
   if (st === 'feedback') {
     if (!after.querySelector('textarea')) {
       after.innerHTML = `<div class="fb"><b>선생님 피드백</b><span id="fbt"></span></div>
-      <div class="card"><div class="stepl" style="margin-top:0">완성본 옮겨 쓰기 · 피드백을 반영해 한 편의 제보서로 옮겨 써요 (CODE NAME 제외 70단어 이내)</div>
+      <div class="card"><div class="stepl" style="margin-top:0">완성본 옮겨 쓰기 · 피드백을 반영해 한 편의 제보서로 옮겨 써요 (CODE NAME 제외 100단어 이내)</div>
       <div class="fld"><textarea class="final" data-k="final" aria-label="완성한 제보서"></textarea></div>
       <div class="actions"><button class="btn" id="mk">표에 쓴 문장 모으기</button><span class="wc" id="wc"></span><span style="flex:1"></span><button class="btn primary" id="go">암호화하여 전송</button></div><p class="msg" id="gm"></p></div>`;
       const ta = after.querySelector('textarea');
       ta.onfocus = () => { focusKey = 'final'; presence('final') }; ta.onblur = () => focusKey = null;
       ta.oninput = () => { wc(); dirty.final = ta.value; G.final = ta.value; clearTimeout(pendingT.final); pendingT.final = setTimeout(() => send({ final: dirty.final }), 400) };
       $('#mk').onclick = () => { ta.value = D.tip.map(t => (G[t.k] || '').trim()).filter(Boolean).join(' '); wc(); send({ final: ta.value }) };
-      $('#go').onclick = () => { const n = words(ta.value); if (n < 20) { $('#gm').className = 'msg err'; $('#gm').textContent = '완성본을 먼저 써요 (20단어 이상).'; return } if (n > 70) { $('#gm').className = 'msg err'; $('#gm').textContent = `70단어를 넘었어요 (${n}단어). 줄여 주세요.`; return } if (!(G.codename || '').trim()) { $('#gm').className = 'msg err'; $('#gm').textContent = 'CODE NAME을 먼저 정하세요.'; return } send({ final: ta.value }, { status: 'final' }).then(() => { stopPoll(); $('#g').dataset.final = '1'; finale(true) }) };
+      $('#go').onclick = () => { const n = words(ta.value); if (n < 20) { $('#gm').className = 'msg err'; $('#gm').textContent = '완성본을 먼저 써요 (20단어 이상).'; return } if (n > 100) { $('#gm').className = 'msg err'; $('#gm').textContent = `100단어를 넘었어요 (${n}단어). 줄여 주세요.`; return } if (!(G.codename || '').trim()) { $('#gm').className = 'msg err'; $('#gm').textContent = 'CODE NAME을 먼저 정하세요.'; return } send({ final: ta.value }, { status: 'final' }).then(() => { stopPoll(); $('#g').dataset.final = '1'; finale(true) }) };
     }
     $('#fbt').innerHTML = String(G.t_feedback || '').split('\n').filter(x => x.trim()).map(x => /^\d\.\s/.test(x) ? `<span class="fh">${esc(x)}</span>` : /^\+/.test(x) ? `<span class="fp">${esc(x)}</span>` : /^-/.test(x) ? `<span class="fm">${esc(x)}</span>` : `<span class="fx">${esc(x)}</span>`).join('');
     const ta = after.querySelector('textarea'); if (focusKey !== 'final' && !('final' in dirty) && document.activeElement !== ta && (G.final || '') !== ta.value) ta.value = G.final || '';
     const box = ta.closest('.fld'); let tag = box.querySelector('.who'); const ws = whoOn('final'); if (ws.length) { if (!tag) { tag = el('span', 'who'); box.appendChild(tag) } tag.textContent = ws.join('·') + ' 작성 중' } else if (tag) tag.remove();
     wc();
   } else after.innerHTML = '';
-  function wc() { const ta = after.querySelector('textarea'); if (!ta) return; const n = words(ta.value); $('#wc').textContent = `${n} / 70 단어`; $('#wc').className = 'wc' + (n > 70 ? ' over' : '') }
+  function wc() { const ta = after.querySelector('textarea'); if (!ta) return; const n = words(ta.value); $('#wc').textContent = `${n} / 100 단어`; $('#wc').className = 'wc' + (n > 100 ? ' over' : '') }
 }
 /* ---------- 전송 연출 ---------- */
 function ov(html) { const o = el('div', 'ov', html); $('#ovRoot').innerHTML = ''; $('#ovRoot').appendChild(o); return o }
